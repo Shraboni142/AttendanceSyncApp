@@ -1,0 +1,192 @@
+﻿@using System.Configuration
+@* page title and layout *@
+@{
+    ViewBag.Title = "Attandance Synchronization";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    @* page header with back button *@
+    <div class="d-flex justify-content-between align-items-center my-4">
+        <h2 class="mb-0">Attandance Synchronization System</h2>
+        <a href="@Url.Action("Dashboard", "Attandance")" class="btn btn-outline-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
+
+    @* company database selector dropdown *@
+    <div class="row mb-4">
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow">
+                <div class="card-body">
+                    <label class="form-label"><strong>Select Company Database</strong></label>
+                    <select class="form-select" id="companyDatabaseSelect">
+                        <option value="">-- Select Company Database --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* main sync content section *@
+    <div id="syncContent" class="d-none">
+        @* hidden fields to store selected company data *@
+        <input type="hidden" id="employeeId" />
+        <input type="hidden" id="selectedCompanyId" />
+        <input type="hidden" id="selectedToolId" />
+        <input type="hidden" id="selectedDbConfigId" />
+
+        @* create new synchronization button *@
+        <div class="d-flex justify-content-end mb-3">
+            <button class="btn btn-primary" onclick="showCreateModal()">
+                <i class="fa fa-plus me-2"></i>Create New Synchronization
+            </button>
+        </div>
+
+        @* sort controls accordion *@
+        <div class="accordion mb-4" id="sortAccordion">
+            <div class="accordion-item shadow-sm">
+                <h2 class="accordion-header" id="sortHeading">
+                    <button class="accordion-button collapsed fw-semibold"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#sortCollapse"
+                            aria-expanded="false"
+                            aria-controls="sortCollapse">
+                        <i class="fa fa-sort me-2 text-primary"></i>
+                        Sort Synchronization Records
+                    </button>
+                </h2>
+                <div id="sortCollapse"
+                     class="accordion-collapse collapse"
+                     aria-labelledby="sortHeading"
+                     data-bs-parent="#sortAccordion">
+                    <div class="accordion-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Sort Field</label>
+                                <select id="sortColumn" class="form-select">
+                                    <option value="ToDate">To Date</option>
+                                    <option value="FromDate">From Date</option>
+                                    <option value="Id">ID</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Sort Order</label>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-primary w-50 sort-dir-btn active" data-value="DESC">Desc</button>
+                                    <button type="button" class="btn btn-outline-secondary w-50 sort-dir-btn" data-value="ASC">Asc</button>
+                                </div>
+                                <input type="hidden" id="sortDirection" value="DESC" />
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary w-100 py-2" onclick="applySorting()">
+                                    Apply Sorting
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* synchronization records table *@
+        <div class="table-section shadow">
+            <h4 class="mb-3">Synchronization Records</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped table-hover mb-0">
+                    <thead>
+                        <tr class="text-center">
+                            <th>ID</th>
+                            <th>From Date</th>
+                            <th>To Date</th>
+                            <th>Company</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="syncTableBody" class="text-center">
+                        <tr>
+                            <td colspan="5">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-wrapper navigation mt-2">
+                <div class="text-center">
+                    <ul class="pagination" id="pagination"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* message shown when user has no company access *@
+    <div id="noAccessMessage" class="d-none">
+        <div class="alert alert-warning text-center mt-4">
+            <h5>No Company Access</h5>
+            <p>You don't have access to any company databases. Please request company access first.</p>
+        </div>
+    </div>
+</div>
+
+@* modal for creating new synchronization *@
+<div class="modal fade" id="createSyncModal" tabindex="-1" aria-labelledby="createSyncModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createSyncModalLabel">Create New Synchronization</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="syncForm">
+                    <div class="mb-3">
+                        <label for="fromDate" class="form-label">From Date</label>
+                        <input type="date" class="form-control" id="fromDate" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="toDate" class="form-label">To Date</label>
+                        <input type="date" class="form-control" id="toDate" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitSyncBtn" onclick="createSynchronization()">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* app configuration *@
+    <script>
+    // ================================
+    // USER SIDE NUnit Tool Redirect
+    // ================================
+    (function () {
+
+        var originalOpenTool = window.openTool;
+
+        window.openTool = function (toolName) {
+
+            // ✅ ONLY NUnit Testing Tool
+            if (toolName === "NUnit Testing Tool") {
+                window.location.href = "/NUnitTesting/Index";
+                return;
+            }
+
+            // 🔒 existing modal behavior
+            if (typeof originalOpenTool === "function") {
+                originalOpenTool(toolName);
+            }
+        };
+
+    })();
+</script>
+
+    @* attendance synchronization functionality script *@
+    <script src="~/Scripts/AttandanceSync/AttandanceSync.js"></script>
+}

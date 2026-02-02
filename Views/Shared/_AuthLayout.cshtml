@@ -1,0 +1,31 @@
+@using System.Configuration
+@* authentication layout template for login and register pages *@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Smart Tool</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/Auth.css" rel="stylesheet" />
+    <link href="~/Content/sweetalert2.min.css" rel="stylesheet" />
+</head>
+<body class="auth-body">
+    @* authentication page wrapper *@
+    <div class="auth-wrapper">
+        @RenderBody()
+    </div>
+
+    @* required javascript libraries *@
+    <script src="~/Scripts/jquery-3.7.1.min.js"></script>
+    <script src="~/Scripts/bootstrap.bundle.min.js"></script>
+    <script src="~/Scripts/sweetalert2@11.js"></script>
+    @* app configuration *@
+    <script>
+        window.APP = {
+            baseUrl: '@Url.Content(ConfigurationManager.AppSettings["AppBaseUrl"])'
+        };
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,52 @@
+﻿@{
+    ViewBag.Title = "Run NUnit Tests";
+}
+
+<h3>Upload NUnit Test DLL</h3>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form method="post" enctype="multipart/form-data">
+    <input type="file" name="testDll" class="form-control" />
+    <br />
+    <button type="submit" class="btn btn-success">
+        Execute Tests
+    </button>
+</form>
+
+@* =============================== *@
+@* STEP-8.2 ADD: Summary Cards *@
+@* =============================== *@
+@if (ViewBag.TotalTests != null)
+{
+    <div class="row mt-3 mb-3">
+        <div class="col-md-3">
+            <div class="alert alert-primary">
+                <strong>Total:</strong> @ViewBag.TotalTests
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="alert alert-success">
+                <strong>Passed:</strong> @ViewBag.PassedTests
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="alert alert-danger">
+                <strong>Failed:</strong> @ViewBag.FailedTests
+            </div>
+        </div>
+    </div>
+}
+
+@* =============================== *@
+@* EXISTING RESULT OUTPUT (UNCHANGED) *@
+@* =============================== *@
+@if (ViewBag.ResultXml != null)
+{
+    <hr />
+    <h4>Test Result</h4>
+    <pre>@ViewBag.ResultXml</pre>
+}

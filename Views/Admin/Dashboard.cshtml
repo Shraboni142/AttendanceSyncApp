@@ -1,0 +1,143 @@
+﻿@using System.Configuration
+@* page title and layout *@
+@{
+    ViewBag.Title = "Dashboard";
+    ViewBag.ActiveMenu = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@* dashboard statistics cards *@
+<div class="dashboard-stats">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-card shadow">
+                <h4>Total Users</h4>
+                <span id="totalUsers" class="stat-number">-</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card shadow">
+                <h4>Total Requests</h4>
+                <span id="totalRequests" class="stat-number">-</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card shadow">
+                <h4>Pending Requests</h4>
+                <span id="pendingRequests" class="stat-number">-</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card shadow">
+                <h4>Completed Requests</h4>
+                <span id="completedRequests" class="stat-number">-</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* recent activity sections *@
+<div class="row mt-4">
+    <div class="col-md-6">
+        @* recent requests table *@
+        <div class="card shadow">
+            <div class="card-header">
+                <h5>Recent Requests</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm" id="recentRequestsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Company</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        @* recent users table *@
+        <div class="card shadow">
+            <div class="card-header">
+                <h5>Recent Users</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm" id="recentUsersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    @* app configuration *@
+    <script>
+        // ===============================
+        // NUnit Tool Redirect (USER SIDE)
+        // ===============================
+        (function () {
+
+            var oldOpenTool = window.openTool;
+
+            window.openTool = function (toolName) {
+
+                // ✅ ONLY for NUnit Testing Tool
+                if (toolName === "NUnit Testing Tool") {
+                    window.location.href = "/NUnitTesting/Index";
+                    return;
+                }
+
+                // 🔒 existing behavior unchanged
+                if (typeof oldOpenTool === "function") {
+                    oldOpenTool(toolName);
+                }
+            };
+
+        })();
+    </script>
+
+
+    @* existing dashboard script (UNCHANGED) *@
+    <script src="~/Scripts/Admin/Dashboard.js"></script>
+
+    @* ============================= *@
+    @* STEP-3 ADD: NUnit Tool Routing *@
+    @* ============================= *@
+    <script>
+        // SAFE OVERRIDE: only for NUnit Testing Tool
+        // No existing JS modified
+        (function () {
+
+            // keep reference if openTool already exists
+            var originalOpenTool = window.openTool;
+
+            window.openTool = function (toolName) {
+
+                // ✅ ONLY ADD – NUnit Testing Tool
+                if (toolName === "NUnit Testing Tool") {
+                    window.location.href = "/NUnitTesting/Index";
+                    return;
+                }
+
+                // 🔒 fallback to existing behavior
+                if (typeof originalOpenTool === "function") {
+                    originalOpenTool(toolName);
+                }
+            };
+
+        })();
+    </script>
+}

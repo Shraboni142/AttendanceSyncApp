@@ -1,0 +1,93 @@
+@* page title and layout *@
+@{
+    ViewBag.Title = "Sign Up";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<div class="auth-container">
+    <div class="auth-card shadow">
+        <div class="auth-header">
+            <h2>Sign Up</h2>
+            <p>Create your Attandance Sync account</p>
+        </div>
+
+        @* Google authentication button section *@
+        <div class="google-signup-section">
+            <div id="g_id_onload"
+                 data-client_id="@ViewBag.GoogleClientId"
+                 data-context="signup"
+                 data-ux_mode="popup"
+                 data-callback="handleGoogleSignUp"
+                 data-auto_prompt="false">
+            </div>
+
+            <div id="googleSignUpContainer">
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="signup_with"
+                     data-size="large"
+                     data-logo_alignment="left"
+                     data-width="300">
+                </div>
+            </div>
+            <div id="googleSignUpSpinner" class="text-center py-2" style="display:none;">
+                <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                <span class="ms-2">Signing up with Google...</span>
+            </div>
+        </div>
+
+        <div class="divider">
+            <span>or</span>
+        </div>
+
+        @* Email registration form section *@
+        <div class="email-register-section">
+            @* form was handled in the Auth.js file *@
+            <form id="emailRegisterForm">
+                <div class="form-group mb-3">
+                    <label for="registerName">Full Name</label>
+                    <input type="text" class="form-control" id="registerName" placeholder="Enter your full name" required minlength="2" maxlength="150" />
+                </div>
+                <div class="form-group mb-3">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" class="form-control" id="registerEmail" placeholder="Enter your email" required />
+                </div>
+                <div class="form-group mb-3">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" class="form-control" id="registerPassword" placeholder="Min 8 characters" required minlength="8" />
+                    <small class="form-text text-muted">
+                        Password must be at least 8 characters
+                    </small>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="registerConfirmPassword">Confirm Password</label>
+                    <input type="password" class="form-control" id="registerConfirmPassword" placeholder="Confirm your password" required />
+                </div>
+                <button type="submit" class="btn btn-primary btn-block w-100" id="registerButton">
+                    <span class="button-text">Create Account</span>
+                    <span class="button-spinner" style="display:none;">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Creating account...
+                    </span>
+                </button>
+            </form>
+        </div>
+
+        @* showing alert message *@
+        <div id="message" class="alert d-none mt-3"></div>
+
+        @* Sign in button by click on this it will redirect to the sign in page *@
+        <div class="auth-footer">
+            <p>Already have an account? <a href="@Url.Action("Login", "Auth")">Sign In</a></p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @* handel google sign in and sign up page *@
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    @* script to all action and api in the auth.js file *@
+    <script src="~/Scripts/Auth.js"></script>
+}
