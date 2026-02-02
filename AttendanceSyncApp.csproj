@@ -179,6 +179,7 @@
     <Compile Include="Controllers\AdminRequestsController.cs" />
     <Compile Include="Controllers\AdminSessionsController.cs" />
     <Compile Include="Controllers\AdminToolsController.cs" />
+    <Compile Include="Controllers\AdminUserApprovalController.cs" />
     <Compile Include="Controllers\AdminUsersController.cs" />
     <Compile Include="Controllers\AdminUserToolsController.cs" />
     <Compile Include="Controllers\AttandanceSync\AttandanceController.cs" />
@@ -203,6 +204,10 @@
     <Compile Include="Migrations\202601280602277_dbchange.cs" />
     <Compile Include="Migrations\202601280602277_dbchange.designer.cs">
       <DependentUpon>202601280602277_dbchange.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202602021050393_AddUserApprovalStatus.cs" />
+    <Compile Include="Migrations\202602021050393_AddUserApprovalStatus.Designer.cs">
+      <DependentUpon>202602021050393_AddUserApprovalStatus.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AppDbContext.cs" />
@@ -275,6 +280,7 @@
     <Compile Include="Models\DTOs\CompanyRequest\CompanyRequestCreateDto.cs" />
     <Compile Include="Models\DTOs\CompanyRequest\CompanyRequestListDto.cs" />
     <Compile Include="Models\Sync\UserTool.cs" />
+    <Compile Include="Models\UserApprovalStatus.cs" />
     <Compile Include="Models\UserToolAccess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repositories\AttandanceSync\AttandanceSynchronizationRepository.cs" />
@@ -437,6 +443,7 @@
     <Content Include="Views\Admin\LoginSessions.cshtml" />
     <Content Include="Views\NUnitTesting\Index.cshtml" />
     <Content Include="Views\NUnitTesting\Run.cshtml" />
+    <Content Include="Views\AdminUserApproval\Index.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -451,6 +458,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202601280602277_dbchange.resx">
       <DependentUpon>202601280602277_dbchange.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202602021050393_AddUserApprovalStatus.resx">
+      <DependentUpon>202602021050393_AddUserApprovalStatus.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

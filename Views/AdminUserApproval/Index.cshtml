@@ -1,0 +1,67 @@
+﻿@model IEnumerable<AttandanceSyncApp.Models.UserApprovalStatus>
+
+<h2>User Approval</h2>
+
+<table class="table table-bordered">
+    <tr>
+        <th>ID</th>
+        <th>User Id</th>
+        <th>Email Verified</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.Id</td>
+            <td>@item.UserId</td>
+            <td>@item.IsEmailVerified</td>
+            <td>
+                @(item.IsAdminApproved ? "Approved" : "Pending")
+            </td>
+            <td>
+                @if (!item.IsAdminApproved)
+                {
+                    <button class="btn btn-success"
+                            onclick="approveUser(@item.Id)">
+                        Approve
+                    </button>
+                }
+                else
+                {
+                    <span class="badge bg-success">Approved</span>
+                }
+            </td>
+        </tr>
+    }
+</table>
+@section Scripts {
+
+    <script>
+
+        function approveUser(id) {
+
+            $.post('/AdminUserApproval/ApproveUser', { id: id })
+                .done(function (res) {
+
+                    if (res.success) {
+                        alert("User Approved Successfully!");
+                        location.reload();
+                    } else {
+                        alert(res.message);
+                    }
+
+                })
+                .fail(function () {
+                    alert("Server error - API not found");
+                });
+
+        }
+
+    </script>
+
+}
+
+
+}
