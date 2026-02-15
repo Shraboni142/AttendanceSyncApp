@@ -1,4 +1,5 @@
-@* page title and layout *@
+﻿@using AttandanceSyncApp.Models.AttandanceSync
+
 @{
     ViewBag.Title = "Sign Up";
     Layout = "~/Views/Shared/_AuthLayout.cshtml";
@@ -6,88 +7,124 @@
 
 <div class="auth-container">
     <div class="auth-card shadow">
+
         <div class="auth-header">
             <h2>Sign Up</h2>
             <p>Create your Attandance Sync account</p>
         </div>
 
-        @* Google authentication button section *@
-        <div class="google-signup-section">
-            <div id="g_id_onload"
-                 data-client_id="@ViewBag.GoogleClientId"
-                 data-context="signup"
-                 data-ux_mode="popup"
-                 data-callback="handleGoogleSignUp"
-                 data-auto_prompt="false">
+        <div class="divider"><span>or</span></div>
+
+        <!-- ✅ FORM ACTION FIXED -->
+        <form method="post" action="@Url.Action("RegisterRequest","Auth")">
+
+            <!-- ===== EMPLOYEE DROPDOWN ===== -->
+            <div class="form-group">
+                <label>Select Employee</label>
+
+                <select id="empDropdown" name="EmployeeId" class="form-control" required>
+                    <option value="">-- Select --</option>
+
+                    @if (ViewBag.Employees != null)
+                    {
+                        foreach (var emp in ViewBag.Employees)
+                        {
+                            <option value="@emp.Id" data-email="@emp.Email">
+                                @emp.Name
+                            </option>
+                        }
+                    }
+                </select>
             </div>
 
-            <div id="googleSignUpContainer">
-                <div class="g_id_signin"
-                     data-type="standard"
-                     data-shape="rectangular"
-                     data-theme="outline"
-                     data-text="signup_with"
-                     data-size="large"
-                     data-logo_alignment="left"
-                     data-width="300">
-                </div>
+            <!-- ===== EMAIL DROPDOWN (NEW SYSTEM) ===== -->
+            <div class="form-group">
+                <label>Select Email</label>
+
+                <select id="emailDropdown" name="Email" class="form-control" required>
+                    <option value="">-- Select Email --</option>
+                </select>
             </div>
-            <div id="googleSignUpSpinner" class="text-center py-2" style="display:none;">
-                <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
-                <span class="ms-2">Signing up with Google...</span>
+
+            <!-- ===== COMPANY DROPDOWN ===== -->
+            <div class="form-group">
+                <label>Company Name</label>
+
+                <select name="CompanyId" class="form-control" required>
+                    <option value="">Select Company</option>
+
+                    @foreach (var c in ViewBag.Companies)
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                </select>
             </div>
-        </div>
 
-        <div class="divider">
-            <span>or</span>
-        </div>
+            <!-- ===== TOOL DROPDOWN ===== -->
+            <div class="form-group">
+                <label>Tool</label>
 
-        @* Email registration form section *@
-        <div class="email-register-section">
-            @* form was handled in the Auth.js file *@
-            <form id="emailRegisterForm">
-                <div class="form-group mb-3">
-                    <label for="registerName">Full Name</label>
-                    <input type="text" class="form-control" id="registerName" placeholder="Enter your full name" required minlength="2" maxlength="150" />
-                </div>
-                <div class="form-group mb-3">
-                    <label for="registerEmail">Email</label>
-                    <input type="email" class="form-control" id="registerEmail" placeholder="Enter your email" required />
-                </div>
-                <div class="form-group mb-3">
-                    <label for="registerPassword">Password</label>
-                    <input type="password" class="form-control" id="registerPassword" placeholder="Min 8 characters" required minlength="8" />
-                    <small class="form-text text-muted">
-                        Password must be at least 8 characters
-                    </small>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="registerConfirmPassword">Confirm Password</label>
-                    <input type="password" class="form-control" id="registerConfirmPassword" placeholder="Confirm your password" required />
-                </div>
-                <button type="submit" class="btn btn-primary btn-block w-100" id="registerButton">
-                    <span class="button-text">Create Account</span>
-                    <span class="button-spinner" style="display:none;">
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        Creating account...
-                    </span>
-                </button>
-            </form>
-        </div>
+                <select name="ToolId" class="form-control" required>
+                    <option value="">Select Tool</option>
 
-        @* showing alert message *@
-        <div id="message" class="alert d-none mt-3"></div>
+                    @foreach (var t in ViewBag.Tools)
+                    {
+                        <option value="@t.Id">@t.Name</option>
+                    }
+                </select>
+            </div>
 
-        @* Sign in button by click on this it will redirect to the sign in page *@
-        <div class="auth-footer">
-            <p>Already have an account? <a href="@Url.Action("Login", "Auth")">Sign In</a></p>
-        </div>
+            <button type="submit" class="btn btn-primary w-100">
+                Create Account
+            </button>
+
+        </form>
+
+        @if (TempData["msg"] != null)
+        {
+            <div class="alert alert-info mt-3">
+                @TempData["msg"]
+            </div>
+        }
+
     </div>
 </div>
 
-@section Scripts {
-    @* handel google sign in and sign up page *@
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    @* script to all action and api in the auth.js file *@
-    <script src="~/Scripts/Auth.js"></script>
+<!-- ================= SCRIPT SECTION ================= -->
+@section Scripts{
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            var empDropdown = document.getElementById("empDropdown");
+            var emailDropdown = document.getElementById("emailDropdown");
+
+            if (!empDropdown || !emailDropdown) {
+                console.log("Dropdown not found!");
+                return;
+            }
+
+            empDropdown.addEventListener("change", function () {
+
+                // আগের email clear
+                emailDropdown.innerHTML =
+                    '<option value="">-- Select Email --</option>';
+
+                var selected = this.options[this.selectedIndex];
+
+                var email = selected.getAttribute("data-email");
+
+                console.log("Selected Email:", email);
+
+                if (email) {
+                    var opt = document.createElement("option");
+                    opt.value = email;
+                    opt.text = email;
+                    opt.selected = true;
+
+                    emailDropdown.appendChild(opt);
+                }
+            });
+
+        });
+    </script>
 }

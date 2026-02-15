@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using AttandanceSyncApp.Models.DTOs;
 using AttandanceSyncApp.Models.DTOs.Admin;
@@ -221,12 +221,16 @@ namespace AttandanceSyncApp.Services.Admin
         /// </summary>
         /// <param name="requestId">The request ID to reject.</param>
         /// <returns>Success or failure result.</returns>
-        public ServiceResult RejectRequest(int requestId)
+        // ==================== UPDATED REJECT METHOD ====================
+
+        // ==================== UPDATED REJECT METHOD ====================
+
+        public ServiceResult RejectRequest(int requestId, string reason)
         {
             try
             {
-                // Retrieve the request
                 var request = _unitOfWork.CompanyRequests.GetById(requestId);
+
                 if (request == null)
                 {
                     return ServiceResult.FailureResult("Request not found");
@@ -242,19 +246,25 @@ namespace AttandanceSyncApp.Services.Admin
                     return ServiceResult.FailureResult("Cannot reject a completed or already rejected request");
                 }
 
+                // ====== NEW LOGIC ======
                 request.Status = "RR";
+                request.RejectReason = reason;      // 🔥 NEW FIELD
                 request.UpdatedAt = DateTime.Now;
+                // =======================
 
                 _unitOfWork.CompanyRequests.Update(request);
                 _unitOfWork.SaveChanges();
 
-                return ServiceResult.SuccessResult("Request rejected");
+                return ServiceResult.SuccessResult("Request rejected with reason");
             }
             catch (Exception ex)
             {
                 return ServiceResult.FailureResult($"Failed to reject request: {ex.Message}");
             }
         }
+
+
+
 
         /// <summary>
         /// Assigns a database configuration to a company request and marks it as completed.

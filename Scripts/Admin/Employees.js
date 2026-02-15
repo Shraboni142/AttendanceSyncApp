@@ -1,4 +1,4 @@
-/* ============================
+﻿/* ============================
    Admin Employees Management
 ============================ */
 var currentPage = 1;
@@ -22,17 +22,18 @@ function loadEmployees(page) {
         var tbody = $('#employeesTable tbody').empty();
 
         if (res.Errors && res.Errors.length > 0) {
-            tbody.append('<tr><td colspan="6" class="text-danger">' + res.Message + '</td></tr>');
+            tbody.append('<tr><td colspan="7" class="text-danger">' + res.Message + '</td></tr>');
             return;
         }
 
         var data = res.Data;
         if (!data.Data || !data.Data.length) {
-            tbody.append('<tr><td colspan="6">No employees found</td></tr>');
+            tbody.append('<tr><td colspan="7">No employees found</td></tr>');
             return;
         }
 
         $.each(data.Data, function (_, item) {
+
             var statusBadge = item.IsActive
                 ? '<span class="badge bg-success">Active</span>'
                 : '<span class="badge bg-danger">Inactive</span>';
@@ -48,7 +49,12 @@ function loadEmployees(page) {
                 '<tr>' +
                 '<td>' + item.Id + '</td>' +
                 '<td>' + item.Name + '</td>' +
-                '<td>' + statusBadge + '</td>' +
+
+                // ✅ FIXED EMAIL COLUMN (এখানে আর Active দেখাবে না)
+                '<td>' + (item.Email ? item.Email : '') + '</td>' +
+
+
+                '<td>' + item.IsActive + '</td>' +
                 '<td>' + formatDateTime(item.CreatedAt) + '</td>' +
                 '<td>' + formatDateTime(item.UpdatedAt) + '</td>' +
                 '<td>' + actions + '</td>' +
@@ -62,8 +68,13 @@ function loadEmployees(page) {
 
 function showCreateModal() {
     $('#employeeModalTitle').text('Add Employee');
+
     $('#employeeId').val('');
     $('#employeeName').val('');
+
+    // NEW
+    $('#employeeEmail').val('');
+
     $('#employeeActive').prop('checked', true);
     employeeModal.show();
 }
@@ -76,17 +87,28 @@ function editEmployee(id) {
         }
 
         var employee = res.Data;
+
         $('#employeeModalTitle').text('Edit Employee');
         $('#employeeId').val(employee.Id);
         $('#employeeName').val(employee.Name);
+
+        // NEW
+        $('#employeeEmail').val(employee.Email);
+
         $('#employeeActive').prop('checked', employee.IsActive);
         employeeModal.show();
     });
 }
 
 function saveEmployee() {
+
     var id = $('#employeeId').val();
+
     var name = $('#employeeName').val().trim();
+
+    // NEW
+    var email = $('#employeeEmail').val().trim();
+
     var isActive = $('#employeeActive').prop('checked');
 
     if (!name) {
@@ -94,10 +116,33 @@ function saveEmployee() {
         return;
     }
 
-    var url = id ? APP.baseUrl + 'AdminEmployees/UpdateEmployee' : APP.baseUrl + 'AdminEmployees/CreateEmployee';
+    if (!email) {
+        Swal.fire('Validation Error', 'Email is required', 'warning');
+        return;
+    }
+
+    var url = id
+        ? APP.baseUrl + 'AdminEmployees/UpdateEmployee'
+        : APP.baseUrl + 'AdminEmployees/CreateEmployee';
+
     var data = id
-        ? { Id: parseInt(id), Name: name, IsActive: isActive }
-        : { Name: name, IsActive: isActive };
+        ? {
+            Id: parseInt(id),
+            Name: name,
+
+            // NEW
+            Email: email,
+
+            IsActive: isActive
+        }
+        : {
+            Name: name,
+
+            // NEW
+            Email: email,
+
+            IsActive: isActive
+        };
 
     $.ajax({
         url: url,
@@ -124,8 +169,6 @@ function toggleStatus(id) {
         text: 'Are you sure you want to change this employee\'s status?',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
         confirmButtonText: 'Yes, change it'
     }).then((result) => {
         if (result.isConfirmed) {
@@ -133,16 +176,8 @@ function toggleStatus(id) {
                 url: APP.baseUrl + 'AdminEmployees/ToggleEmployeeStatus',
                 type: 'POST',
                 data: { id: id },
-                success: function (res) {
-                    if (res.Errors && res.Errors.length > 0) {
-                        Swal.fire('Error', res.Message, 'error');
-                    } else {
-                        Swal.fire('Success', res.Message, 'success');
-                        loadEmployees(currentPage);
-                    }
-                },
-                error: function () {
-                    Swal.fire('Error', 'Failed to update status', 'error');
+                success: function () {
+                    loadEmployees(currentPage);
                 }
             });
         }
@@ -152,11 +187,9 @@ function toggleStatus(id) {
 function deleteEmployee(id) {
     Swal.fire({
         title: 'Delete Employee',
-        text: 'Are you sure you want to delete this employee? This action cannot be undone.',
+        text: 'Are you sure you want to delete this employee?',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, delete it'
     }).then((result) => {
         if (result.isConfirmed) {
@@ -164,16 +197,8 @@ function deleteEmployee(id) {
                 url: APP.baseUrl + 'AdminEmployees/DeleteEmployee',
                 type: 'POST',
                 data: { id: id },
-                success: function (res) {
-                    if (res.Errors && res.Errors.length > 0) {
-                        Swal.fire('Error', res.Message, 'error');
-                    } else {
-                        Swal.fire('Deleted', res.Message, 'success');
-                        loadEmployees(currentPage);
-                    }
-                },
-                error: function () {
-                    Swal.fire('Error', 'Failed to delete employee', 'error');
+                success: function () {
+                    loadEmployees(currentPage);
                 }
             });
         }

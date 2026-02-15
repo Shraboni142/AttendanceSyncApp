@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,6 +15,7 @@ namespace AttandanceSyncApp.Models.AttandanceSync
 
         [Required]
         public DateTime ToDate { get; set; }
+        public string Email { get; set; }     // ✅ NEW
 
         [Required]
         public int CompanyId { get; set; }

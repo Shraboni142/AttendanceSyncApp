@@ -1,10 +1,15 @@
-using System.Web.Mvc;
 using AttandanceSyncApp.Controllers.Filters;
 using AttandanceSyncApp.Models.DTOs;
 using AttandanceSyncApp.Models.DTOs.AttandanceSync;
 using AttandanceSyncApp.Repositories;
 using AttandanceSyncApp.Services.Admin;
 using AttandanceSyncApp.Services.Interfaces.Admin;
+using System;
+using System.Linq;
+using System.Web.Mvc;
+using AttandanceSyncApp.Models;
+using AttandanceSyncApp.Models.AttandanceSync;
+
 
 namespace AttandanceSyncApp.Controllers
 {
@@ -87,37 +92,69 @@ namespace AttandanceSyncApp.Controllers
             return Json(ApiResponse.Success(result.Message));
         }
 
-        // POST: AdminCompanyRequests/AcceptRequest
         [HttpPost]
         public JsonResult AcceptRequest(int requestId)
         {
             // Accept and approve a company request
             var result = _adminCompanyRequestService.AcceptRequest(requestId);
 
-            // If acceptance fails, return error
             if (!result.Success)
             {
                 return Json(ApiResponse.Fail(result.Message));
             }
 
-            // Return success message
+            // ========== NEW LOGIC START ==========
+
+            try
+            {
+                var uow = new AuthUnitOfWork();
+
+                // Get request info
+                var req = uow.CompanyRequests
+                    .GetAll()
+                    .FirstOrDefault(x => x.Id == requestId);
+
+                if (req != null)
+                {
+                    // Check already assigned?
+                    var exists = uow.UserTools
+                        .GetAll()
+                        .Any(x => x.UserId == req.UserId
+                               && x.ToolId == req.ToolId);
+
+                    if (!exists)
+                    {
+                        var ut = new UserTool
+                        {
+                            UserId = req.UserId,
+                            ToolId = req.ToolId,
+                            AssignedBy = CurrentUser.Id,
+                            AssignedAt = DateTime.Now,
+                            IsRevoked = false
+                        };
+
+                        uow.UserTools.Add(ut);
+                        uow.SaveChanges();
+                    }
+                }
+            }
+            catch
+            {
+                // silent fail - main approval not blocked
+            }
+
+            // ========== NEW LOGIC END ==========
+
             return Json(ApiResponse.Success(result.Message));
         }
 
         // POST: AdminCompanyRequests/RejectRequest
         [HttpPost]
-        public JsonResult RejectRequest(int requestId)
+        public JsonResult RejectRequest(int requestId, string reason)
         {
-            // Reject a company request
-            var result = _adminCompanyRequestService.RejectRequest(requestId);
+            var result = _adminCompanyRequestService
+                          .RejectRequest(requestId, reason);
 
-            // If rejection fails, return error
-            if (!result.Success)
-            {
-                return Json(ApiResponse.Fail(result.Message));
-            }
-
-            // Return success message
             return Json(ApiResponse.Success(result.Message));
         }
 

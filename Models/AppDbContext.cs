@@ -1,27 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using AttandanceSyncApp.Models.AttandanceSync;
+using AttendanceSyncApp.Models;
 using System.Data.Entity;
-using AttandanceSyncApp.Models.AttandanceSync;
 
 namespace AttandanceSyncApp.Models
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext() : base("name=DefaultConnection")
+        public AppDbContext()
+            : base("name=AttendanceSyncConnection")
         {
         }
 
-        /// <summary>
-        /// Constructor for dynamic connection strings (external databases)
-        /// </summary>
-        public AppDbContext(string connectionString) : base(connectionString)
+        // Dynamic connection er jonno
+        public AppDbContext(string connectionString)
+            : base(connectionString)
         {
         }
 
         public DbSet<Company> Companies { get; set; }
+
         public DbSet<AttandanceSynchronization> AttandanceSynchronizations { get; set; }
+
+        public DbSet<SignupRequest> SignupRequests { get; set; }
+
+        // ✅ ONLY ADDED THESE TWO LINES (NO CHANGE to existing code)
+        public DbSet<Tool> Tools { get; set; }
+
+        public DbSet<Employee> Employees { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using AttandanceSyncApp.Models.Auth;
@@ -40,6 +40,7 @@ namespace AttandanceSyncApp.Models.AttandanceSync
         // Navigation Properties
         [ForeignKey("UserId")]
         public virtual User User { get; set; }
+        public string RejectReason { get; set; }   // 🔥 NEW
 
         [ForeignKey("EmployeeId")]
         public virtual Employee Employee { get; set; }

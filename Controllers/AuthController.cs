@@ -1,12 +1,14 @@
-using System.Configuration;
-using System.Linq;
-using System.Web.Mvc;
+﻿using AttandanceSyncApp.Data;
 using AttandanceSyncApp.Models;
 using AttandanceSyncApp.Models.DTOs;
 using AttandanceSyncApp.Models.DTOs.Auth;
 using AttandanceSyncApp.Repositories;
 using AttandanceSyncApp.Services.Auth;
 using AttandanceSyncApp.Services.Interfaces.Auth;
+using System;
+using System.Configuration;
+using System.Linq;
+using System.Web.Mvc;
 
 namespace AttandanceSyncApp.Controllers
 {
@@ -25,14 +27,15 @@ namespace AttandanceSyncApp.Controllers
             _googleAuthService = googleAuthService;
         }
 
+        // ================= LOGIN =================
+
         public ActionResult Login()
         {
             if (IsAuthenticated)
             {
                 if (IsAdmin)
-                {
                     return RedirectToAction("Index", "AdminDashboard");
-                }
+
                 return RedirectToAction("Dashboard", "Attandance");
             }
 
@@ -40,21 +43,47 @@ namespace AttandanceSyncApp.Controllers
             return View();
         }
 
-        public ActionResult Register()
+        // ================= REGISTER (GET) =================
+
+        [HttpPost]
+        public ActionResult Register(SignupRequest model)
         {
-            if (IsAuthenticated)
+            using (var db = new ApplicationDbContext())
             {
-                return RedirectToAction("Dashboard", "Attandance");
+                model.Status = "Pending";
+
+                db.SignupRequests.Add(model);
+                db.SaveChanges();
             }
 
-            ViewBag.GoogleClientId = ConfigurationManager.AppSettings["GoogleClientId"];
-            return View();
+            TempData["msg"] = "Please wait for admin approval";
+
+            return RedirectToAction("Register");
         }
+
+
+        // ============== SIGNUP REQUEST (POST) ==============
+
+        [HttpPost]
+        public ActionResult RegisterRequest(SignupRequest model)
+        {
+            using (var db = new AppDbContext())
+            {
+                db.SignupRequests.Add(model);
+                db.SaveChanges();
+            }
+
+            TempData["msg"] = "Signup request sent for approval";
+            return RedirectToAction("Register");
+        }
+
+        // ================= GOOGLE SIGN IN =================
 
         [HttpPost]
         public JsonResult GoogleSignIn(GoogleAuthDto googleAuth)
         {
             var sessionInfo = GetSessionInfo();
+
             var result = _authService.LoginWithGoogle(googleAuth, sessionInfo);
 
             if (result.Success)
@@ -66,40 +95,13 @@ namespace AttandanceSyncApp.Controllers
             return Json(ApiResponse<UserDto>.Fail(result.Message));
         }
 
-        [HttpPost]
-        public JsonResult GoogleSignUp(GoogleAuthDto googleAuth)
-        {
-            var sessionInfo = GetSessionInfo();
-            var result = _authService.RegisterWithGoogle(googleAuth, sessionInfo);
-
-            if (result.Success)
-            {
-                SetSessionCookie(result.Data.SessionToken);
-                return Json(ApiResponse<UserDto>.Success(result.Data, result.Message));
-            }
-
-            return Json(ApiResponse<UserDto>.Fail(result.Message));
-        }
-
-        [HttpPost]
-        public JsonResult AdminLogin(string email, string password)
-        {
-            var sessionInfo = GetSessionInfo();
-            var result = _authService.LoginAdmin(email, password, sessionInfo);
-
-            if (result.Success)
-            {
-                SetSessionCookie(result.Data.SessionToken);
-                return Json(ApiResponse<UserDto>.Success(result.Data, result.Message));
-            }
-
-            return Json(ApiResponse<UserDto>.Fail(result.Message));
-        }
+        // ================= USER LOGIN =================
 
         [HttpPost]
         public JsonResult UserLogin(LoginDto loginDto)
         {
             var sessionInfo = GetSessionInfo();
+
             var result = _authService.LoginUser(loginDto.Email, loginDto.Password, sessionInfo);
 
             if (result.Success)
@@ -111,7 +113,7 @@ namespace AttandanceSyncApp.Controllers
             return Json(ApiResponse<UserDto>.Fail(result.Message));
         }
 
-        // ================== MAIN REGISTER METHOD ==================
+        // ============== MAIN SYSTEM REGISTER ==============
 
         [HttpPost]
         public JsonResult Register(RegisterDto registerDto)
@@ -131,7 +133,6 @@ namespace AttandanceSyncApp.Controllers
 
             if (result.Success)
             {
-                // ===== NEW USER MANAGEMENT LAYER (ADD ONLY - NO CHANGE) =====
                 try
                 {
                     var uow = new AuthUnitOfWork();
@@ -145,20 +146,17 @@ namespace AttandanceSyncApp.Controllers
 
                     uow.SaveChanges();
                 }
-                catch
-                {
-                    // silently ignore - main registration must not break
-                }
-                // ============================================================
+                catch { }
 
                 SetSessionCookie(result.Data.SessionToken);
+
                 return Json(ApiResponse<UserDto>.Success(result.Data, result.Message));
             }
 
             return Json(ApiResponse<UserDto>.Fail(result.Message));
         }
 
-        // ============================================================
+        // ================= LOGOUT =================
 
         [HttpPost]
         public JsonResult Logout()
@@ -166,14 +164,14 @@ namespace AttandanceSyncApp.Controllers
             var token = GetSessionToken();
 
             if (!string.IsNullOrEmpty(token))
-            {
                 _authService.Logout(token);
-            }
 
             ClearSessionCookie();
 
             return Json(ApiResponse.Success("Logged out successfully"));
         }
+
+        // ================= CURRENT USER =================
 
         [HttpGet]
         public JsonResult CurrentUser()
@@ -181,29 +179,61 @@ namespace AttandanceSyncApp.Controllers
             var token = GetSessionToken();
 
             if (string.IsNullOrEmpty(token))
-            {
                 return Json(ApiResponse<UserDto>.Fail("Not authenticated"), JsonRequestBehavior.AllowGet);
-            }
 
             var result = _authService.GetCurrentUser(token);
 
             if (!result.Success)
-            {
                 return Json(ApiResponse<UserDto>.Fail(result.Message), JsonRequestBehavior.AllowGet);
-            }
 
             return Json(ApiResponse<UserDto>.Success(result.Data), JsonRequestBehavior.AllowGet);
         }
-
-        public ActionResult GoogleCallback(string code, string state, string error)
+        [HttpPost]
+        public JsonResult UserLogin(string email, string password)
         {
-            if (!string.IsNullOrEmpty(error))
+            try
             {
-                ViewBag.Error = error;
-                return View("Login");
-            }
+                using (var db = new AttandanceSyncApp.Models.AppDbContext())
+                {
+                    var user = db.Employees
+                        .FirstOrDefault(x =>
+                            x.Email == email &&
+                            x.Password == password &&
+                            x.IsActive == true);
 
-            return RedirectToAction("Login");
+                    if (user != null)
+                    {
+                        Session["UserId"] = user.Id;
+                        Session["UserName"] = user.Name;
+                        Session["UserRole"] = user.Role;
+
+                        return Json(new
+                        {
+                            success = true,
+                            role = user.Role
+                        });
+                    }
+                    else
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = "Invalid email or password"
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
+
+
+
     }
 }

@@ -84,6 +84,34 @@
     </div>
 </div>
 
+@* ================== NEW : REJECT REASON MODAL ================== *@
+
+<div class="modal fade" id="rejectModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Reason</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <textarea id="rejectReason" class="form-control"
+                          placeholder="Write reason here..."></textarea>
+
+                <input type="hidden" id="rejectId" />
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="confirmReject()">
+                    Reject
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 
     @* existing JS *@

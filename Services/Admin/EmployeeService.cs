@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using AttandanceSyncApp.Models.DTOs;
 using AttandanceSyncApp.Models.DTOs.Admin;
@@ -46,6 +46,7 @@ namespace AttandanceSyncApp.Services.Admin
                     {
                         Id = e.Id,
                         Name = e.Name,
+                        Email = e.Email ?? "Not Set",
                         IsActive = e.IsActive,
                         CreatedAt = e.CreatedAt,
                         UpdatedAt = e.UpdatedAt
@@ -77,8 +78,8 @@ namespace AttandanceSyncApp.Services.Admin
         {
             try
             {
-                // Fetch employee by ID
                 var employee = _unitOfWork.Employees.GetById(id);
+
                 if (employee == null)
                 {
                     return ServiceResult<EmployeeDto>.FailureResult("Employee not found");
@@ -88,6 +89,10 @@ namespace AttandanceSyncApp.Services.Admin
                 {
                     Id = employee.Id,
                     Name = employee.Name,
+
+                    // 🔥 THIS WAS MISSING
+                    Email = employee.Email,
+
                     IsActive = employee.IsActive,
                     CreatedAt = employee.CreatedAt,
                     UpdatedAt = employee.UpdatedAt
@@ -101,24 +106,30 @@ namespace AttandanceSyncApp.Services.Admin
             }
         }
 
+
         /// <summary>
         /// Creates a new employee record.
         /// </summary>
         /// <param name="dto">The employee data to create.</param>
         /// <returns>Success or failure result.</returns>
+        // ================= CREATE =================
         public ServiceResult CreateEmployee(EmployeeCreateDto dto)
         {
             try
             {
-                // Validate employee name
                 if (string.IsNullOrWhiteSpace(dto.Name))
-                {
                     return ServiceResult.FailureResult("Employee name is required");
-                }
+
+                if (string.IsNullOrWhiteSpace(dto.Email))
+                    return ServiceResult.FailureResult("Email is required");
 
                 var employee = new Employee
                 {
                     Name = dto.Name.Trim(),
+
+                    // ✅ NEW
+                    Email = dto.Email.Trim(),
+
                     IsActive = dto.IsActive,
                     CreatedAt = DateTime.Now
                 };
@@ -130,32 +141,31 @@ namespace AttandanceSyncApp.Services.Admin
             }
             catch (Exception ex)
             {
-                return ServiceResult.FailureResult($"Failed to create employee: {ex.Message}");
+                return ServiceResult.FailureResult($"Failed: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Updates an existing employee's information.
-        /// </summary>
-        /// <param name="dto">The updated employee data.</param>
-        /// <returns>Success or failure result.</returns>
+        // ================= UPDATE =================
         public ServiceResult UpdateEmployee(EmployeeUpdateDto dto)
         {
             try
             {
-                // Retrieve existing employee
                 var employee = _unitOfWork.Employees.GetById(dto.Id);
+
                 if (employee == null)
-                {
                     return ServiceResult.FailureResult("Employee not found");
-                }
 
                 if (string.IsNullOrWhiteSpace(dto.Name))
-                {
-                    return ServiceResult.FailureResult("Employee name is required");
-                }
+                    return ServiceResult.FailureResult("Name required");
+
+                if (string.IsNullOrWhiteSpace(dto.Email))
+                    return ServiceResult.FailureResult("Email required");
 
                 employee.Name = dto.Name.Trim();
+
+                // ✅ NEW
+                employee.Email = dto.Email.Trim();
+
                 employee.IsActive = dto.IsActive;
                 employee.UpdatedAt = DateTime.Now;
 
@@ -166,7 +176,7 @@ namespace AttandanceSyncApp.Services.Admin
             }
             catch (Exception ex)
             {
-                return ServiceResult.FailureResult($"Failed to update employee: {ex.Message}");
+                return ServiceResult.FailureResult($"Failed: {ex.Message}");
             }
         }
 

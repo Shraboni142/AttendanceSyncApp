@@ -195,6 +195,8 @@
     <Compile Include="Controllers\SalaryGarbge\AdminDatabaseAccessController.cs" />
     <Compile Include="Controllers\SalaryGarbge\AdminServerIpController.cs" />
     <Compile Include="Controllers\SalaryGarbge\SalaryGarbgeController.cs" />
+    <Compile Include="Controllers\SignupController.cs" />
+    <Compile Include="Data\ApplicationDbContext.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -267,8 +269,10 @@
     <Compile Include="Models\DTOs\Sync\SyncRequestDto.cs" />
     <Compile Include="Models\DTOs\Sync\UserCompanyDatabaseDto.cs" />
     <Compile Include="Models\DynamicDbContext.cs" />
+    <Compile Include="Models\NamespaceFix.cs" />
     <Compile Include="Models\SalaryGarbge\DatabaseAccess.cs" />
     <Compile Include="Models\SalaryGarbge\ServerIp.cs" />
+    <Compile Include="Models\SignupRequest.cs" />
     <Compile Include="Models\Sync\AttandanceSyncRequest.cs" />
     <Compile Include="Models\Sync\DatabaseAssign.cs" />
     <Compile Include="Models\Sync\DatabaseConfiguration.cs" />

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -14,6 +14,14 @@ namespace AttandanceSyncApp.Models.AttandanceSync
         [Required]
         [StringLength(255)]
         public string Name { get; set; }
+     
+        // ✅ ADD THIS (Login password)
+        public string Password { get; set; }
+
+        // ✅ ADD THIS (ADMIN বা USER)
+        public string Role { get; set; }
+
+        public string Email { get; set; }
 
         public bool IsActive { get; set; } = true;
 
@@ -21,7 +29,6 @@ namespace AttandanceSyncApp.Models.AttandanceSync
 
         public DateTime? UpdatedAt { get; set; }
 
-        // Navigation
         public virtual ICollection<AttandanceSyncRequest> SyncRequests { get; set; }
         public virtual ICollection<CompanyRequest> CompanyRequests { get; set; }
 

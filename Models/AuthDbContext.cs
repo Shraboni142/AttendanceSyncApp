@@ -10,7 +10,7 @@ namespace AttandanceSyncApp.Models
     /// </summary>
     public class AuthDbContext : DbContext
     {
-        public AuthDbContext() : base("name=AttandanceSyncConnection")
+        public AuthDbContext() : base("name=AttendanceSyncConnection")
         {
             // ===== CRITICAL FIX ADDED =====
             Database.SetInitializer<AuthDbContext>(null);
@@ -18,6 +18,8 @@ namespace AttandanceSyncApp.Models
         }
 
         public DbSet<UserApprovalStatus> UserApprovalStatuses { get; set; }
+ 
+        public DbSet<UserApprovalStatus> UserApprovalStatus { get; set; }
 
         // Auth entities
         public DbSet<User> Users { get; set; }

@@ -1,4 +1,4 @@
-@* page title and layout *@
+﻿@* page title and layout *@
 @{
     ViewBag.Title = "Sign In";
     Layout = "~/Views/Shared/_AuthLayout.cshtml";
@@ -32,8 +32,9 @@
                      data-width="300">
                 </div>
             </div>
+
             <div id="googleSignInSpinner" class="text-center py-2" style="display:none;">
-                <span class="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                <span class="spinner-border spinner-border-sm text-primary"></span>
                 <span class="ms-2">Signing in with Google...</span>
             </div>
         </div>
@@ -42,41 +43,73 @@
             <span>or</span>
         </div>
 
-        <!-- Email Login Form -->
+        <!-- ✅ FIXED EMAIL LOGIN FORM -->
         <div class="email-login-section">
-            @* form was handled in the Auth.js file *@
-            <form id="emailLoginForm">
+
+            <!-- IMPORTANT FIX: added action="/Auth/Login" -->
+            <form id="emailLoginForm" method="post" action="@Url.Action("Login","Auth")">
+
                 <div class="form-group mb-3">
-                    <label for="loginEmail">Email</label>
-                    <input type="email" class="form-control" id="loginEmail" placeholder="Enter your email" required/>
+                    <label>Email</label>
+
+                    <!-- IMPORTANT FIX: added name="Email" -->
+                    <input type="email"
+                           class="form-control"
+                           id="loginEmail"
+                           name="Email"
+                           placeholder="Enter your email"
+                           required />
                 </div>
+
                 <div class="form-group mb-3">
-                    <label for="loginPassword">Password</label>
-                    <input type="password" class="form-control" id="loginPassword" placeholder="Enter your password" required/>
+                    <label>Password</label>
+
+                    <!-- IMPORTANT FIX: added name="Password" -->
+                    <input type="password"
+                           class="form-control"
+                           id="loginPassword"
+                           name="Password"
+                           placeholder="Enter your password"
+                           required />
                 </div>
-                <button type="submit" class="btn btn-primary btn-block w-100" id="loginButton">
+
+                <button type="submit"
+                        class="btn btn-primary btn-block w-100"
+                        id="loginButton">
+
                     <span class="button-text">Sign In</span>
-                    <span class="button-spinner" style="display: none;">
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+
+                    <span class="button-spinner" style="display:none;">
+                        <span class="spinner-border spinner-border-sm"></span>
                         Signing in...
                     </span>
+
                 </button>
+
             </form>
+
         </div>
-        
-        @* showing alert message *@
+
+        <!-- showing alert message -->
         <div id="message" class="alert d-none mt-3"></div>
-        
-        @* Sign up button by click on this it will redirect to the sign up page *@
+
+        <!-- signup redirect -->
         <div class="auth-footer">
-            <p>Don't have an account? <a href="@Url.Action("Register", "Auth")">Sign Up</a></p>
+            <p>
+                Don't have an account?
+                <a href="@Url.Action("Register", "Auth")">Sign Up</a>
+            </p>
         </div>
+
     </div>
 </div>
 
 @section Scripts {
-    @* handel google sign in and sign up page *@
-    <script src="https://accounts.google.com/gsi/client" async defer></script> 
-    @* script to all action and api in the auth.js file *@
+
+    <!-- Google -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <!-- your auth js -->
     <script src="~/Scripts/Auth.js"></script>
+
 }

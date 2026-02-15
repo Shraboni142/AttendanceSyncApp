@@ -6,12 +6,10 @@ using System.Linq;
 using System.Web.Mvc;
 using AttandanceSyncApp.Models.AttandanceSync;
 
-
 namespace AttandanceSyncApp.Controllers
 {
     [AdminAuthorize]
     public class AdminUserApprovalController : BaseController
-
     {
         private readonly AuthUnitOfWork _uow;
 
@@ -29,14 +27,10 @@ namespace AttandanceSyncApp.Controllers
                 .Where(x => x.IsAdminApproved == false)
                 .ToList();
 
-            // DEBUG LINE
             System.Diagnostics.Debug.WriteLine("TOTAL PENDING = " + pending.Count);
 
             return View(pending);
         }
-
-
-
 
         [HttpGet]
         public JsonResult GetPendingUsers()
@@ -62,23 +56,46 @@ namespace AttandanceSyncApp.Controllers
                 .GetAll()
                 .FirstOrDefault(x => x.Id == id);
 
-            if (record == null)
+            var db = new AppDbContext();
+
+            var signup = db.SignupRequests
+                            .FirstOrDefault(s => s.Id == id);
+
+            if (record == null || signup == null)
                 return Json(new { success = false, message = "Not found" });
 
-            // 1. Mark Approved
+            var authDb = new AuthDbContext();
+
+            var employee = authDb.Employees
+                .FirstOrDefault(e => e.Id == signup.EmployeeId);
+
+            if (employee == null)
+            {
+                return Json(new { success = false, message = "Employee not found" });
+            }
+
+            if (employee.Email != signup.Email)
+            {
+                return Json(new { success = false, message = "Email Not Matching" });
+            }
+
+            signup.Status = "Approved";
             record.IsAdminApproved = true;
 
-            // 2. Auto Assign Default Tool (ToolId = 1)
             var already = _uow.UserTools
                 .GetAll()
-                .Any(x => x.UserId == record.UserId && x.ToolId == 1);
+                .Any(x => x.UserId == record.UserId
+                       && x.ToolId == signup.ToolId);
 
             if (!already)
             {
                 var ut = new UserTool
                 {
                     UserId = record.UserId,
-                    ToolId = 1,
+
+                    // ✅ FIXED LINE (ONLY THIS WAS WRONG)
+                    ToolId = signup.ToolId ?? 0,
+
                     AssignedBy = CurrentUser.Id,
                     AssignedAt = DateTime.Now,
                     IsRevoked = false
@@ -88,10 +105,9 @@ namespace AttandanceSyncApp.Controllers
             }
 
             _uow.SaveChanges();
+            db.SaveChanges();
 
-            return Json(new { success = true });
+            return Json(new { success = true, message = "Approved Successfully" });
         }
-
-
     }
 }

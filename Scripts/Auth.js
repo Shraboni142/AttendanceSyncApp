@@ -1,8 +1,15 @@
+﻿/* ============================
+   GLOBAL APP CONFIG (ADD THIS AT TOP)
+============================ */
+var APP = APP || {};
+APP.baseUrl = APP.baseUrl || '/';
+
+
 /* ============================
    Google Sign-In Handler
 ============================ */
 function handleGoogleSignIn(response) {
-    // Show spinner and hide Google button
+
     $('#googleSignInContainer').hide();
     $('#googleSignInSpinner').show();
 
@@ -12,256 +19,272 @@ function handleGoogleSignIn(response) {
         data: {
             idToken: response.credential
         },
+
         success: function (res) {
+
+            if (!res) {
+                showMessage('Server returned empty response', 'danger');
+                return;
+            }
+
             if (res.Errors && res.Errors.length > 0) {
-                // Hide spinner and show Google button on error
+
                 $('#googleSignInSpinner').hide();
                 $('#googleSignInContainer').show();
+
                 showMessage(res.Message || res.Errors[0], 'danger');
-            } else if (res.Data) {
+                return;
+            }
+
+            if (res.Data) {
+
                 showMessage('Login successful! Redirecting...', 'success');
-                // Keep spinner visible during redirect
+
                 setTimeout(function () {
+
                     if (res.Data.Role === 'ADMIN') {
+
                         window.location.href = APP.baseUrl + 'AdminDashboard';
+
                     } else {
+
                         window.location.href = APP.baseUrl;
+
                     }
-                }, 1000);
+
+                }, 500);
             }
         },
-        error: function () {
-            // Hide spinner and show Google button on error
+
+        error: function (xhr) {
+
             $('#googleSignInSpinner').hide();
             $('#googleSignInContainer').show();
-            showMessage('Login failed. Please try again.', 'danger');
+
+            console.log(xhr.responseText);
+
+            showMessage('Google login failed', 'danger');
         }
     });
 }
 
-/* ============================
-   Google Sign-Up Handler
-============================ */
-function handleGoogleSignUp(response) {
-    // Show spinner and hide Google button
-    $('#googleSignUpContainer').hide();
-    $('#googleSignUpSpinner').show();
-
-    $.ajax({
-        url: APP.baseUrl + 'Auth/GoogleSignUp',
-        type: 'POST',
-        data: {
-            idToken: response.credential
-        },
-        success: function (res) {
-            if (res.Errors && res.Errors.length > 0) {
-                // Hide spinner and show Google button on error
-                $('#googleSignUpSpinner').hide();
-                $('#googleSignUpContainer').show();
-                showMessage(res.Message || res.Errors[0], 'danger');
-            } else if (res.Data) {
-                showMessage('Registration successful! Redirecting...', 'success');
-                // Keep spinner visible during redirect
-                setTimeout(function () {
-                    window.location.href = APP.baseUrl;
-                }, 1000);
-            }
-        },
-        error: function () {
-            // Hide spinner and show Google button on error
-            $('#googleSignUpSpinner').hide();
-            $('#googleSignUpContainer').show();
-            showMessage('Registration failed. Please try again.', 'danger');
-        }
-    });
-}
 
 /* ============================
-   Email Login Form Handler
+   EMAIL LOGIN HANDLER (FIXED)
 ============================ */
-$(function () {
-    $('#emailLoginForm').on('submit', function (e) {
+$(document).ready(function () {
+
+    $('#emailLoginForm').submit(function (e) {
+
         e.preventDefault();
 
-        var email = $('#loginEmail').val();
-        var password = $('#loginPassword').val();
+        var email = $('#loginEmail').val().trim();
+        var password = $('#loginPassword').val().trim();
 
-        if (!email || !password) {
-            showMessage('Please enter both email and password.', 'warning');
+        if (email === '' || password === '') {
+
+            showMessage('Enter email and password', 'warning');
             return;
         }
 
-        // Show spinner and disable button
-        var $button = $('#loginButton');
+        var $btn = $('#loginButton');
 
-        // Direct DOM manipulation to ensure it works
-        $button.find('.button-text').hide();
-        $button.find('.button-spinner').show();
-        $button.prop('disabled', true);
+        $btn.find('.button-text').hide();
+        $btn.find('.button-spinner').show();
+        $btn.prop('disabled', true);
+
 
         $.ajax({
-            url: APP.baseUrl + 'Auth/UserLogin',
+
+            url: '/Auth/UserLogin',   // HARD FIXED URL
+
             type: 'POST',
+
+            dataType: 'json',
+
             data: {
                 email: email,
                 password: password
             },
+
             success: function (res) {
+
+                console.log("LOGIN RESPONSE:", res);
+
+
+                if (!res) {
+
+                    showMessage('Invalid server response', 'danger');
+                    resetButton($btn);
+                    return;
+                }
+
+
                 if (res.Errors && res.Errors.length > 0) {
-                    // Hide spinner and enable button on error
-                    $button.find('.button-text').show();
-                    $button.find('.button-spinner').hide();
-                    $button.prop('disabled', false);
-                    showMessage(res.Message || res.Errors[0], 'danger');
-                } else if (res.Data) {
-                    showMessage('Login successful! Redirecting...', 'success');
-                    // Keep spinner visible during redirect
+
+                    showMessage(res.Errors[0], 'danger');
+                    resetButton($btn);
+                    return;
+                }
+
+
+                if (res.Data) {
+
+                    showMessage('Login success', 'success');
+
                     setTimeout(function () {
+
                         if (res.Data.Role === 'ADMIN') {
-                            window.location.href = APP.baseUrl + 'AdminDashboard';
+
+                            window.location.href = '/AdminDashboard';
+
                         } else {
-                            window.location.href = APP.baseUrl;
+
+                            window.location.href = '/';
                         }
-                    }, 1000);
+
+                    }, 500);
+
+                }
+                else {
+
+                    showMessage('Login failed', 'danger');
+                    resetButton($btn);
                 }
             },
-            error: function () {
-                // Hide spinner and enable button on error
-                $button.find('.button-text').show();
-                $button.find('.button-spinner').hide();
-                $button.prop('disabled', false);
-                showMessage('Login failed. Please try again.', 'danger');
+
+            error: function (xhr) {
+
+                console.log("LOGIN ERROR:", xhr.responseText);
+
+                showMessage('Server error during login', 'danger');
+
+                resetButton($btn);
             }
+
         });
+
     });
+
 });
 
+
 /* ============================
-   Email Registration Form Handler
+   EMAIL REGISTER HANDLER
 ============================ */
-$(function () {
-    $('#emailRegisterForm').on('submit', function (e) {
+$(document).ready(function () {
+
+    $('#emailRegisterForm').submit(function (e) {
+
         e.preventDefault();
 
-        var name = $('#registerName').val().trim();
-        var email = $('#registerEmail').val().trim();
+        var name = $('#registerName').val();
+        var email = $('#registerEmail').val();
         var password = $('#registerPassword').val();
         var confirmPassword = $('#registerConfirmPassword').val();
 
-        // Client-side validation
-        if (!name || !email || !password || !confirmPassword) {
-            showMessage('Please fill in all fields.', 'warning');
-            return;
-        }
+        var $btn = $('#registerButton');
 
-        if (name.length < 2) {
-            showMessage('Name must be at least 2 characters.', 'warning');
-            return;
-        }
+        $btn.find('.button-text').hide();
+        $btn.find('.button-spinner').show();
+        $btn.prop('disabled', true);
 
-        if (password.length < 8) {
-            showMessage('Password must be at least 8 characters.', 'warning');
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            showMessage('Passwords do not match.', 'warning');
-            return;
-        }
-
-        // Show spinner and disable button
-        var $button = $('#registerButton');
-
-        // Direct DOM manipulation to ensure it works
-        $button.find('.button-text').hide();
-        $button.find('.button-spinner').show();
-        $button.prop('disabled', true);
 
         $.ajax({
-            url: APP.baseUrl + 'Auth/Register',
+
+            url: '/Auth/Register',
+
             type: 'POST',
+
+            dataType: 'json',
+
             data: {
+
                 name: name,
                 email: email,
                 password: password,
                 confirmPassword: confirmPassword
             },
+
             success: function (res) {
+
                 if (res.Errors && res.Errors.length > 0) {
-                    // Hide spinner and enable button on error
-                    $button.find('.button-text').show();
-                    $button.find('.button-spinner').hide();
-                    $button.prop('disabled', false);
-                    showMessage(res.Message || res.Errors[0], 'danger');
-                } else if (res.Data) {
-                    showMessage('Registration successful! Redirecting...', 'success');
-                    // Keep spinner visible during redirect
-                    setTimeout(function () {
-                        window.location.href = APP.baseUrl;
-                    }, 1000);
+
+                    showMessage(res.Errors[0], 'danger');
+
+                    resetButton($btn);
+
+                    return;
                 }
+
+                showMessage('Registration success', 'success');
+
+                setTimeout(function () {
+
+                    window.location.href = '/Auth/Login';
+
+                }, 500);
             },
+
             error: function () {
-                // Hide spinner and enable button on error
-                $button.find('.button-text').show();
-                $button.find('.button-spinner').hide();
-                $button.prop('disabled', false);
-                showMessage('Registration failed. Please try again.', 'danger');
+
+                showMessage('Registration failed', 'danger');
+
+                resetButton($btn);
             }
+
         });
+
     });
+
 });
 
+
 /* ============================
-   Logout Handler
+   LOGOUT
 ============================ */
 function logout() {
+
     $.ajax({
-        url: APP.baseUrl + 'Auth/Logout',
+
+        url: '/Auth/Logout',
+
         type: 'POST',
+
         success: function () {
-            window.location.href = APP.baseUrl + 'Auth/Login';
+
+            window.location.href = '/Auth/Login';
+
         },
+
         error: function () {
-            window.location.href = APP.baseUrl + 'Auth/Login';
+
+            window.location.href = '/Auth/Login';
         }
+
     });
+
 }
+
 
 /* ============================
-   Helper Functions
+   HELPER
 ============================ */
+
 function showMessage(msg, type) {
+
     var $msg = $('#message');
-    $msg.removeClass('d-none alert-success alert-danger alert-warning alert-info')
+
+    $msg.removeClass()
         .addClass('alert alert-' + type)
         .text(msg)
-        .fadeIn();
-
-    if (type === 'success') {
-        // Don't auto-hide success messages (will redirect)
-    } else {
-        setTimeout(function () {
-            $msg.fadeOut();
-        }, 5000);
-    }
+        .show();
 }
 
-/**
- * Toggles the loading state of a button (shows/hides spinner and disables/enables button).
- * @param {jQuery} $button - The button element to update.
- * @param {boolean} isLoading - True to show spinner and disable button, false to hide spinner and enable button.
- */
-function setButtonLoading($button, isLoading) {
-    if (isLoading) {
-        // Show spinner, hide text, disable button
-        $button.find('.button-text').hide();
-        $button.find('.button-spinner').show();
-        $button.prop('disabled', true);
-    } else {
-        // Hide spinner, show text, enable button
-        $button.find('.button-text').show();
-        $button.find('.button-spinner').hide();
-        $button.prop('disabled', false);
-    }
+
+function resetButton($btn) {
+
+    $btn.find('.button-text').show();
+    $btn.find('.button-spinner').hide();
+    $btn.prop('disabled', false);
 }

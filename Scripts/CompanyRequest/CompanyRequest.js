@@ -1,4 +1,4 @@
-/* ============================
+﻿/* ============================
    Company Request Management
 ============================ */
 var currentPage = 1;
@@ -16,10 +16,19 @@ $(function () {
     startPolling();
 
     $('#submitRequestBtn').on('click', submitRequest);
+
+    // ===== NEW =====
+    // যখন Tool change হবে → Company filter হবে
+    $('#toolId').on('change', function () {
+        var selectedToolText = $("#toolId option:selected").text();
+        localStorage.setItem("selectedTool", selectedToolText);
+
+        loadCompaniesByTool();
+    });
 });
 
 function startPolling() {
-    pollingInterval = setInterval(function() {
+    pollingInterval = setInterval(function () {
         loadRequests(currentPage, true);
     }, 2000);
 }
@@ -58,6 +67,37 @@ function loadDropdowns() {
         }
     });
 }
+
+/* ======================================
+   🔥 NEW: TOOL অনুযায়ী COMPANY FILTER
+====================================== */
+
+function loadCompaniesByTool() {
+
+    var tool = localStorage.getItem("selectedTool");
+
+    $.get(APP.baseUrl + 'Attandance/GetMyCompanyDatabases', function (res) {
+
+        var list = res.Data;
+
+        // 🔥 FILTER BY TOOL NAME
+        var filtered = list.filter(x => x.ToolName === tool);
+
+        $('#companyId').empty();
+        $('#companyId').append('<option value="">Select Company</option>');
+
+        filtered.forEach(function (c) {
+            $('#companyId').append(
+                `<option value="${c.CompanyId}">${c.CompanyName}</option>`
+            );
+        });
+
+    });
+
+}
+
+/* ====================================== */
+
 
 function loadRequests(page, isPolling) {
     if (!isPolling) {
@@ -106,39 +146,13 @@ function loadRequests(page, isPolling) {
                     '</tr>';
             });
         }
-        
+
         tbody.html(rows);
 
         if (!isPolling) {
             renderPagination(data.TotalRecords, data.Page, data.PageSize);
         }
     });
-}
-
-function getStatusBadge(item) {
-    if (item.IsCancelled) {
-        return '<span class="badge bg-secondary">Cancelled</span>';
-    }
-
-    switch (item.Status) {
-        case 'NR':
-            return '<span class="badge bg-warning text-dark">New Request</span>';
-        case 'IP':
-            return '<span class="badge bg-info">In Progress</span>';
-        case 'CP':
-            return '<span class="badge bg-success">Completed</span>';
-        case 'RR':
-            return '<span class="badge bg-danger">Rejected</span>';
-        default:
-            return '<span class="badge bg-secondary">' + item.Status + '</span>';
-    }
-}
-
-// ... existing code ...
-
-function showCreateModal() {
-    $('#createRequestForm')[0].reset();
-    createModal.show();
 }
 
 function submitRequest() {

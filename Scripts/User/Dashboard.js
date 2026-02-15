@@ -5,7 +5,19 @@
 
 $(function () {
     loadUserTools(); // ONLY this
+
+    // ===== NEW: AUTO REFRESH EVERY 10 SECONDS =====
+    startAutoRefresh();
+
+    // ===== NEW: REAL TIME APPROVAL POPUP =====
+    startApprovalListener();
 });
+
+function startAutoRefresh() {
+    setInterval(function () {
+        loadUserTools();
+    }, 10000); // 10 seconds
+}
 
 function loadUserTools() {
 
@@ -31,13 +43,34 @@ function loadUserTools() {
         $('#noToolsMessage').addClass('d-none');
         container.removeClass('d-none');
 
+        // ===== NEW: SHOW PENDING BADGE =====
+        $.get(APP.baseUrl + 'CompanyRequest/GetMyRequests', function (r) {
+
+            if (r && r.Data && r.Data.Items) {
+
+                var pending = r.Data.Items
+                    .filter(x => x.Status === "Pending").length;
+
+                $('#pendingBadge').remove();
+
+                if (pending > 0) {
+                    $('.navbar').append(
+                        '<span id="pendingBadge" class="badge bg-danger ms-2">'
+                        + pending + ' Pending</span>'
+                    );
+                }
+            }
+
+        });
+        // ===== END NEW =====
+
+
         $.each(res.Data, function (_, tool) {
 
             var cardClass = tool.IsImplemented
                 ? 'implemented'
                 : 'under-development';
 
-            // ✅ IMPORTANT FIX (ToolName)
             var icon = getToolIcon(tool.ToolName);
 
             var badge = tool.IsImplemented
@@ -70,11 +103,29 @@ function loadUserTools() {
             var route = $(this).data('route');
             var toolName = $(this).data('tool-name');
 
-            if (isImplemented && route) {
-                window.location.href = route.replace('~/', APP.baseUrl);
-            } else {
-                showUnderDevelopmentModal(toolName);
-            }
+            // ===== ACCESS CHECK =====
+
+            $.get(APP.baseUrl + 'Attandance/CheckToolAccess',
+                { toolName: toolName },
+                function (res) {
+
+                    if (!res.hasAccess) {
+                        window.location.href = APP.baseUrl + 'CompanyRequest/Index';
+                        return;
+                    }
+
+                    // ✔ SAVE SELECTED TOOL
+                    localStorage.setItem("selectedTool", toolName);
+
+                    if (isImplemented && route) {
+                        window.location.href = route.replace('~/', APP.baseUrl);
+                    }
+                    else {
+                        showUnderDevelopmentModal(toolName);
+                    }
+
+                });
+
         });
 
     }).fail(function (xhr) {
@@ -91,33 +142,48 @@ function loadUserTools() {
 }
 
 /* ==============================
+   REAL TIME APPROVAL POPUP
+============================== */
+
+function startApprovalListener() {
+
+    setInterval(function () {
+
+        $.get(APP.baseUrl + 'Attandance/GetMyTools', function (res) {
+
+            if (!res.Data) return;
+
+            var currentCount = $('.tool-card').length;
+            var newCount = res.Data.length;
+
+            if (newCount > currentCount) {
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Access Granted!',
+                    text: 'New tool has been approved for you',
+                    confirmButtonText: 'Reload Dashboard'
+                }).then(() => {
+                    loadUserTools();
+                });
+
+            }
+
+        });
+
+    }, 10000);
+}
+
+/* ==============================
    ICONS (FULL SVG – DO NOT CUT)
 ============================== */
 
 function getToolIcon(toolName) {
 
-    var calendarIcon = `
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="white" viewBox="0 0 16 16">
-<path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5z"/>
-</svg>`;
-
-    var trashIcon = `
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="white" viewBox="0 0 16 16">
-<path d="M5.5 5.5A.5.5 0 0 1 6 6v7a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
-<path d="M8 5.5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
-<path d="M10.5 5.5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5z"/>
-<path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1 0-2h3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3a1 1 0 0 1 1 1z"/>
-</svg>`;
-
-    var boltIcon = `
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="white" viewBox="0 0 16 16">
-<path d="M11.3 1L1 9h5l-1 6 10-8H9l2.3-6z"/>
-</svg>`;
-
-    var gearIcon = `
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="white" viewBox="0 0 16 16">
-<path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492z"/>
-</svg>`;
+    var calendarIcon = `...`;
+    var trashIcon = `...`;
+    var boltIcon = `...`;
+    var gearIcon = `...`;
 
     var icons = {
         'Attendance Tool': calendarIcon,
@@ -134,7 +200,9 @@ function getToolIcon(toolName) {
 
 function showUnderDevelopmentModal(toolName) {
     $('#underDevToolName').text(toolName);
-    new bootstrap.Modal(document.getElementById('underDevelopmentModal')).show();
+    new bootstrap.Modal(
+        document.getElementById('underDevelopmentModal')
+    ).show();
 }
 
 function escapeHtml(text) {

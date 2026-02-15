@@ -291,3 +291,26 @@ $(window).on('beforeunload', function () {
         clearInterval(pollingInterval);
     }
 });
+function openReject(id) {
+    $('#rejectId').val(id);
+    new bootstrap.Modal('#rejectModal').show();
+}
+
+function confirmReject() {
+
+    var id = $('#rejectId').val();
+    var reason = $('#rejectReason').val();
+
+    $.post(APP.baseUrl + 'AdminCompanyRequests/RejectRequest',
+        {
+            requestId: id,
+            reason: reason
+        }, function (res) {
+
+            Swal.fire('Done', res.Message, 'success');
+            loadRequests();
+
+        });
+
+}
+
