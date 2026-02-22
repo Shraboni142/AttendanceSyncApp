@@ -1,0 +1,116 @@
+@{
+    ViewBag.Title = "Sign Up";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="d-flex align-items-center justify-content-center"
+     style="min-height:90vh;
+     background: linear-gradient(135deg,#667eea,#764ba2);">
+
+    <div class="card p-4 shadow"
+         style="width:400px;border-radius:15px;">
+
+        <h2 class="text-center mb-3">
+            Sign Up
+        </h2>
+
+        <p class="text-center text-muted mb-4">
+            Create your Attendance Sync account
+        </p>
+
+        <form method="post" action="/Signup/Index">
+
+            <!-- Employee Name -->
+            <div class="mb-3">
+                <label>Employee Name</label>
+                <select name="EmployeeId" class="form-control" required>
+
+                    <option value="">Select Employee</option>
+
+                    @foreach (var emp in ViewBag.Employees)
+                    {
+                        <option value="@emp.Id">@emp.Name</option>
+                    }
+
+                </select>
+
+
+
+
+            </div>
+
+
+            <!-- Employee Email -->
+            <div class="mb-3">
+                <label>Email</label>
+
+                <select name="Email" class="form-control" required>
+
+                    <option value="">Select Email</option>
+
+                    @if (ViewBag.EmployeeEmails != null)
+                    {
+                        foreach (string email in ViewBag.EmployeeEmails)
+                        {
+                            <option value="@email">@email</option>
+                        }
+                    }
+
+                </select>
+
+            </div>
+
+
+
+            <!-- Company -->
+            <div class="mb-3">
+                <label>Company</label>
+
+                <select name="CompanyId" class="form-control" required>
+
+                    <option value="">Select Company</option>
+
+                    @foreach (var comp in ViewBag.Companies)
+                    {
+                        <option value="@comp.Id">@comp.Name</option>
+                    }
+
+                </select>
+
+
+
+
+            </div>
+
+
+            <!-- Tool -->
+            <div class="mb-3">
+                <label>Tool</label>
+
+                <select name="ToolId" class="form-control" required>
+
+                    <option value="">Select Tool</option>
+
+                    @foreach (var tool in ViewBag.Tools)
+                    {
+                        <option value="@tool.Id">@tool.Name</option>
+                    }
+
+                </select>
+
+                >
+            </div>
+
+
+            <button type="submit"
+                    class="btn btn-primary w-100">
+
+                Create Account
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>

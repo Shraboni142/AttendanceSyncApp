@@ -1,0 +1,42 @@
+﻿@{
+    ViewBag.Title = "Signup";
+}
+
+<h2>Signup</h2>
+
+<form method="post">
+
+    <label>Employee</label>
+    <select name="EmployeeId" class="form-control">
+        @foreach (var emp in ViewBag.Employees)
+        {
+            <option value="@emp.Id">@emp.Name</option>
+        }
+    </select>
+
+    <label>Email</label>
+    <input type="email" name="Email" class="form-control" required />
+
+    <label>Company</label>
+    <select name="CompanyId" class="form-control">
+        @foreach (var comp in ViewBag.Companies)
+        {
+            <option value="@comp.Id">@comp.Name</option>
+        }
+    </select>
+
+    <label>Tool</label>
+    <select name="ToolId" class="form-control">
+        @foreach (var tool in ViewBag.Tools)
+        {
+            <option value="@tool.Id">@tool.Name</option>
+        }
+    </select>
+
+    <br />
+
+    <button type="submit" class="btn btn-primary">
+        Signup
+    </button>
+
+</form>

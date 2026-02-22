@@ -1,0 +1,166 @@
+﻿@using System.Configuration
+@* page title and layout *@
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+
+    @* ✅ ADD START: Admin Request Summary *@
+    <div class="row mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h6>PENDING REQUESTS</h6>
+                    <h3>@ViewBag.PendingRequestsCount</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5>Recent Requests</h5>
+                </div>
+                <div class="card-body">
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Email</th>
+                                    <th>Company</th>
+                                    <th>Tool</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                @if (ViewBag.RecentRequests != null)
+                                {
+                                    foreach (var req in ViewBag.RecentRequests)
+                                    {
+                                        <tr>
+                                            <td>@req.Id</td>
+                                            <td>@req.Email</td>
+                                            <td>@req.CompanyId</td>
+                                            <td>@req.ToolId</td>
+                                            <td>@req.Status</td>
+                                            <td>@req.CreatedAt</td>
+                                        </tr>
+                                    }
+                                }
+
+                            </tbody>
+
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    @* ✅ ADD END *@
+
+
+    <h2 class="text-center mb-2">My Tools Dashboard</h2>
+    <hr class="w-25 mx-auto mb-4" style="border-top: 2px solid #667eea;" />
+
+    @* tools container with loading spinner *@
+    <div class="row" id="toolsContainer">
+        <div class="col-12 text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    @* message shown when no tools are assigned *@
+    <div id="noToolsMessage" class="d-none">
+        <div class="alert alert-info text-center">
+            <h5>No Tools Assigned</h5>
+            <p>You don't have any tools assigned yet. Please contact your administrator to request tool access.</p>
+            <a href="@Url.Action("Index", "CompanyRequest")" class="btn btn-primary">Request Company Access</a>
+        </div>
+    </div>
+</div>
+
+@* modal shown when clicking on tools under development *@
+<div class="modal fade" id="underDevelopmentModal" tabindex="-1" aria-labelledby="underDevelopmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="underDevelopmentModalLabel">Under Development</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center">
+
+                <div style="font-size: 4rem; color: #ffc107;">
+                    <!-- icon -->
+                </div>
+
+                <h4 class="mt-3" id="underDevToolName">Tool Name</h4>
+
+                <p class="text-muted">
+                    This tool is currently under development and will be available soon.
+                </p>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .tool-card {
+        border: none;
+        border-radius: 15px;
+        transition: transform 0.3s ease,box-shadow 0.3s ease;
+        cursor: pointer;
+        min-height: 200px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .tool-card.implemented {
+            background: linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color: white;
+        }
+
+        .tool-card.under-development {
+            background: linear-gradient(135deg,#ffc107 0%,#ff9800 100%);
+        }
+</style>
+
+@section Scripts {
+
+    <script>
+window.APP = {
+baseUrl: '@Url.Content(ConfigurationManager.AppSettings["AppBaseUrl"])'
+};
+    </script>
+
+    <script src="~/Scripts/User/Dashboard.js"></script>
+
+}

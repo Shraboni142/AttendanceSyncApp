@@ -1,0 +1,36 @@
+﻿@model IEnumerable<AttendanceSyncApp.Models.UserApproval>
+
+<h2>User Approval</h2>
+
+<table class="table">
+
+    <tr>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+
+            <td>@item.EmployeeEmail</td>
+
+            <td>@item.ApprovalStatus</td>
+
+            <td>
+                @if (item.ApprovalStatus == "Pending")
+                {
+                    <a href="/AdminUserApproval/Approve/@item.Id"
+                       class="btn btn-success">
+
+                        Approve
+
+                    </a>
+                }
+            </td>
+
+        </tr>
+    }
+
+</table>

@@ -1,0 +1,153 @@
+﻿@using System.Configuration
+
+@{
+    ViewBag.Title = "Dashboard";
+    ViewBag.ActiveMenu = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="dashboard-stats">
+    <div class="row">
+
+        <div class="col-md-3">
+            <div class="stat-card shadow">
+                <h4>Total Users</h4>
+                <span id="totalUsers" class="stat-number">-</span>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card shadow">
+                <h4>Total Requests</h4>
+                <<span id="totalRequests" class="stat-number">
+    @(ViewBag.TotalRequests ?? "0")
+</span>
+
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card shadow">
+                <h4>Pending Requests</h4>
+
+                @* ✅ ADD START *@
+                <span id="pendingRequests" class="stat-number">
+                    @(ViewBag.PendingRequestsCount ?? "0")
+                </span>
+
+
+                @* ✅ ADD END *@
+
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="stat-card shadow">
+                <h4>Completed Requests</h4>
+                <span id="completedRequests" class="stat-number">
+                    @(ViewBag.CompletedRequestsCount ?? "0")
+                </span>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="row mt-4">
+
+    <div class="col-md-6">
+
+        <div class="card shadow">
+
+            <div class="card-header">
+                <h5>Recent Requests</h5>
+            </div>
+
+            <div class="card-body">
+
+                <table class="table table-sm" id="recentRequestsTable">
+
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+
+                            @* ✅ ADD *@
+                            <th>Email</th>
+
+                            <th>User</th>
+                            <th>Company</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @* ✅ ADD START *@
+                        @if (ViewBag.RecentRequests != null)
+                        {
+                            foreach (var req in ViewBag.RecentRequests)
+                            {
+                                <tr>
+                                    <td>@req.Id</td>
+                                    <td>@req.Email</td>
+                                    <td>-</td>
+                                    <td>@req.CompanyId</td>
+                                    <td>@req.Status</td>
+                                </tr>
+                            }
+                        }
+                        @* ✅ ADD END *@
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-6">
+
+        <div class="card shadow">
+
+            <div class="card-header">
+                <h5>Recent Users</h5>
+            </div>
+
+            <div class="card-body">
+
+                <table class="table table-sm" id="recentUsersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+
+                    <tbody></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    <script>
+window.APP = {
+baseUrl: '@Url.Content(ConfigurationManager.AppSettings["AppBaseUrl"])'
+};
+    </script>
+
+    <script src="~/Scripts/Admin/Dashboard.js"></script>
+
+}
