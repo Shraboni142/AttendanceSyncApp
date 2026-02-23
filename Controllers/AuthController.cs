@@ -59,6 +59,12 @@ namespace AttandanceSyncApp.Controllers
             ViewBag.GoogleClientId = ConfigurationManager.AppSettings["GoogleClientId"];
             return View();
         }
+        [HttpGet]
+        public ActionResult GenerateHash(string password)
+        {
+            var hash = _authService.GenerateHashedPassword(password);
+            return Content(hash);
+        }
 
         // GET: Auth/Register
         public ActionResult Register()
@@ -242,6 +248,48 @@ namespace AttandanceSyncApp.Controllers
 
             // If login fails, return error response
             return Json(ApiResponse<UserDto>.Fail(result.Message));
+        }
+
+        // ✅ ADD THIS METHOD
+        [HttpPost]
+        public JsonResult SmartLogin(string email, string password)
+        {
+            var sessionInfo = GetSessionInfo();
+
+            using (var db = new AppDbContext())
+            {
+                var user = db.Users.FirstOrDefault(u => u.Email.ToLower() == email.Trim().ToLower());
+
+                if (user == null)
+                {
+                    return Json(ApiResponse<UserDto>.Fail("Invalid email or password"));
+                }
+
+                if (user.Role == "ADMIN")
+                {
+                    var result = _authService.LoginAdmin(email, password, sessionInfo);
+
+                    if (result.Success)
+                    {
+                        SetSessionCookie(result.Data.SessionToken);
+                        return Json(ApiResponse<UserDto>.Success(result.Data, result.Message));
+                    }
+
+                    return Json(ApiResponse<UserDto>.Fail(result.Message));
+                }
+                else
+                {
+                    var result = _authService.LoginUser(email, password, sessionInfo);
+
+                    if (result.Success)
+                    {
+                        SetSessionCookie(result.Data.SessionToken);
+                        return Json(ApiResponse<UserDto>.Success(result.Data, result.Message));
+                    }
+
+                    return Json(ApiResponse<UserDto>.Fail(result.Message));
+                }
+            }
         }
 
         // POST: Auth/Register

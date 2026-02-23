@@ -40,6 +40,7 @@ namespace AttandanceSyncApp.Services.Interfaces.Auth
         ServiceResult Logout(string sessionToken);
 
         ServiceResult<UserDto> GetCurrentUser(string sessionToken);
+        string GenerateHashedPassword(string plainPassword);
 
         bool ValidateSession(string sessionToken);
     }

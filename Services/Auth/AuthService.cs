@@ -337,6 +337,13 @@ namespace AttandanceSyncApp.Services.Auth
             }
         }
 
+        // ===============================
+        // 🔐 TEMP PASSWORD GENERATOR (ADD ONLY)
+        // ===============================
+        public string GenerateHashedPassword(string plainPassword)
+        {
+            return EncryptionHelper.HashPassword(plainPassword);
+        }
         public ServiceResult Logout(string sessionToken)
         {
             return _sessionService.EndSession(sessionToken);

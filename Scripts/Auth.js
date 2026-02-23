@@ -130,7 +130,7 @@ $(function () {
         $button.prop('disabled', true);
 
         $.ajax({
-            url: APP.baseUrl + 'Auth/UserLogin',
+            url: APP.baseUrl + 'Auth/SmartLogin',
             type: 'POST',
             data: {
                 email: email,
