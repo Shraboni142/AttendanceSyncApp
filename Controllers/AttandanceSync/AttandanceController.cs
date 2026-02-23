@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
@@ -78,12 +78,24 @@ namespace AttandanceSyncApp.Controllers.AttandanceSync
         {
             var validToolNames = new[] { "Attendance Sync", "Attandance Sync", "Attendance Tool", "Attandance Tool" };
             var tools = _syncRequestService.GetActiveTools();
-            if (!tools.Success) return false;
 
-            var targetTool = tools.Data.FirstOrDefault(t => validToolNames.Contains(t.Name, StringComparer.OrdinalIgnoreCase));
-            if (targetTool == null) return false;
+            if (!tools.Success)
+                return false;
 
-            return _userToolService.UserHasToolAccess(userId, targetTool.Id);
+            var targetTool = tools.Data
+                .FirstOrDefault(t => validToolNames
+                .Contains(t.Name, StringComparer.OrdinalIgnoreCase));
+
+            if (targetTool == null)
+                return false;
+
+            // 🔥 NEW ADDITION: direct assignment check from UserTools table
+            var hasDirectAssignment = _userToolService.UserHasToolAccess(userId, targetTool.Id);
+
+            if (hasDirectAssignment)
+                return true;
+
+            return false;
         }
 
         // GET: Attandance/Dashboard - User dashboard with tool cards

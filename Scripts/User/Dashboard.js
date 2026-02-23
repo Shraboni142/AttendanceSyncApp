@@ -1,4 +1,4 @@
-/* User Dashboard - Tool Cards */
+﻿/* User Dashboard - Tool Cards */
 
 $(function () {
     loadUserTools();

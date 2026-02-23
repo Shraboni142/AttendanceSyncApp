@@ -298,6 +298,7 @@ namespace AttandanceSyncApp.Controllers
             return Json(ApiResponse.Success("Logged out successfully"));
         }
 
+
         // GET: Auth/CurrentUser
         [HttpGet]
         public JsonResult CurrentUser()
