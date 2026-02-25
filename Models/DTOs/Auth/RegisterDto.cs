@@ -19,6 +19,9 @@ namespace AttandanceSyncApp.Models.DTOs.Auth
 
         [Required(ErrorMessage = "Confirm password is required")]
         [Compare("Password", ErrorMessage = "Passwords do not match")]
+        public int EmployeeId { get; set; }
+        public int CompanyId { get; set; }
+        public int ToolId { get; set; }
         public string ConfirmPassword { get; set; }
     }
 }

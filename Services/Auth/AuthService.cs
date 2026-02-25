@@ -1,5 +1,6 @@
 ﻿using AttandanceSyncApp.Helpers;
 using AttandanceSyncApp.Models;
+using AttandanceSyncApp.Models.AttandanceSync;
 using AttandanceSyncApp.Models.Auth;
 using AttandanceSyncApp.Models.DTOs;
 using AttandanceSyncApp.Models.DTOs.Auth;
@@ -7,7 +8,7 @@ using AttandanceSyncApp.Repositories.Interfaces;
 using AttandanceSyncApp.Services.Interfaces.Auth;
 using System;
 using System.Linq;
-using AttandanceSyncApp.Models.AttandanceSync;
+using System.Web;
 
 namespace AttandanceSyncApp.Services.Auth
 {
@@ -47,7 +48,8 @@ namespace AttandanceSyncApp.Services.Auth
         {
             var clientId = "950626062908-qjitgrv3dat4tvjh0krktasibvnctapc.apps.googleusercontent.com";
 
-            var redirectUri = "https://localhost:44340/Auth/GoogleLoginCallback";
+            var redirectUri = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Authority)
+                   + "/Auth/GoogleLoginCallback";
 
             var url =
                 "https://accounts.google.com/o/oauth2/v2/auth" +
@@ -305,6 +307,26 @@ namespace AttandanceSyncApp.Services.Auth
                 if (_unitOfWork.Users.EmailExists(registerDto.Email.Trim().ToLower()))
                 {
                     return ServiceResult<UserDto>.FailureResult("An account with this email already exists");
+                }
+
+                // ===============================
+                // 🔒 DUPLICATE COMPANY REQUEST CHECK (ADD ONLY)
+                // ===============================
+
+                var duplicateRequest = _unitOfWork.CompanyRequests
+                    .GetAll()
+                    .Any(r =>
+                        r.EmployeeId == registerDto.EmployeeId &&
+                        r.CompanyId == registerDto.CompanyId &&
+                        r.ToolId == registerDto.ToolId &&
+                        !r.IsCancelled &&
+                        (r.Status == "NR" || r.Status == "IP" || r.Status == "CP")
+                    );
+
+                if (duplicateRequest)
+                {
+                    return ServiceResult<UserDto>.FailureResult(
+                        "This employee already has a request for this company and tool.");
                 }
 
                 var user = new User

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -290,10 +290,10 @@ namespace AttandanceSyncApp.Services.SalaryGarbge
         /// Scans a database for garbage salary records.
         /// </summary>
         private List<GarbageDataDto> ScanDatabaseForGarbage(
-            string serverIp,
-            string userId,
-            string encryptedPassword,
-            string databaseName)
+    string serverIp,
+    string userId,
+    string encryptedPassword,
+    string databaseName)
         {
             var garbageData = new List<GarbageDataDto>();
             var connectionString =
@@ -303,16 +303,16 @@ namespace AttandanceSyncApp.Services.SalaryGarbge
             {
                 connection.Open();
 
-                // Validate Employees table and required columns
                 var checkTableQuery = @"
-                    SELECT 1
-                    FROM sys.tables t
-                    INNER JOIN sys.columns c1 ON t.object_id = c1.object_id AND c1.name = 'Id'
-                    INNER JOIN sys.columns c2 ON t.object_id = c2.object_id AND c2.name = 'EmployeeId'
-                    INNER JOIN sys.columns c3 ON t.object_id = c3.object_id AND c3.name = 'FirstName'
-                    INNER JOIN sys.columns c4 ON t.object_id = c4.object_id AND c4.name = 'GradeScaleId'
-                    INNER JOIN sys.columns c5 ON t.object_id = c5.object_id AND c5.name = 'BasicSalary'
-                    WHERE t.name = 'Employees'";
+            SELECT 1
+            FROM sys.tables t
+            INNER JOIN sys.columns c1 ON t.object_id = c1.object_id AND c1.name = 'Id'
+            INNER JOIN sys.columns c2 ON t.object_id = c2.object_id AND c2.name = 'EmployeeId'
+            INNER JOIN sys.columns c3 ON t.object_id = c3.object_id AND c3.name = 'FirstName'
+            INNER JOIN sys.columns c4 ON t.object_id = c4.object_id AND c4.name = 'GradeScaleId'
+            INNER JOIN sys.columns c5 ON t.object_id = c5.object_id AND c5.name = 'BasicSalary'
+            INNER JOIN sys.columns c6 ON t.object_id = c6.object_id AND c6.name = 'IsActive'
+            WHERE t.name = 'Employees'";
 
                 using (var checkCommand =
                     new SqlCommand(checkTableQuery, connection))
@@ -321,19 +321,24 @@ namespace AttandanceSyncApp.Services.SalaryGarbge
                         return garbageData;
                 }
 
-                // Detect invalid salary and grade scale data
+                // ✅ ONLY ADD: IsActive = 1 condition
                 var query = @"
-                    SELECT
-                        Id,
-                        EmployeeId AS EmployeeCode,
-                        FirstName,
-                        GradeScaleId,
-                        BasicSalary
-                    FROM dbo.Employees
-                    WHERE GradeScaleId = 0
-                       OR GradeScaleId IS NULL
-                       OR BasicSalary = 0
-                       OR BasicSalary IS NULL";
+            SELECT
+                Id,
+                EmployeeId AS EmployeeCode,
+                FirstName,
+                GradeScaleId,
+                BasicSalary
+            FROM dbo.Employees
+            WHERE 
+            (
+                GradeScaleId = 0
+                OR GradeScaleId IS NULL
+                OR BasicSalary = 0
+                OR BasicSalary IS NULL
+            )
+            AND IsActive = 1";
+            
 
                 using (var command = new SqlCommand(query, connection))
                 using (var reader = command.ExecuteReader())
