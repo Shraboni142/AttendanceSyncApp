@@ -320,25 +320,30 @@ namespace AttandanceSyncApp.Services.SalaryGarbge
                     if (checkCommand.ExecuteScalar() == null)
                         return garbageData;
                 }
-
-                // ✅ ONLY ADD: IsActive = 1 condition
                 var query = @"
-            SELECT
-                Id,
-                EmployeeId AS EmployeeCode,
-                FirstName,
-                GradeScaleId,
-                BasicSalary
-            FROM dbo.Employees
-            WHERE 
-            (
-                GradeScaleId = 0
-                OR GradeScaleId IS NULL
-                OR BasicSalary = 0
-                OR BasicSalary IS NULL
-            )
-            AND IsActive = 1";
-            
+SELECT Id,
+       EmployeeId AS EmployeeCode,
+       FirstName,
+       GradeScaleId,
+       BasicSalary
+FROM dbo.Employees
+WHERE
+(
+    GradeScaleId = 0
+    OR GradeScaleId IS NULL
+    OR BasicSalary = 0
+    OR BasicSalary IS NULL
+)
+AND
+(
+    IsActive = 1
+    OR
+    (
+        IsActive = 0
+        AND FORMAT(DateOfDiscontinuation, 'MM-yyyy') = '02-2026'
+    )
+)";
+
 
                 using (var command = new SqlCommand(query, connection))
                 using (var reader = command.ExecuteReader())
