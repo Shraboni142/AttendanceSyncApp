@@ -1,6 +1,7 @@
 ﻿using AttandanceSyncApp.Models.AttandanceSync;
 using AttandanceSyncApp.Models.Auth;
 using AttendanceSyncApp.Models;
+using AttandanceSyncApp.Models.SalaryGarbge;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -42,6 +43,7 @@ namespace AttandanceSyncApp.Models
 
         public DbSet<User> Users { get; set; }
         public DbSet<UserNotification> UserNotifications { get; set; }
+        public DbSet<SalaryGarbageRecord> SalaryGarbageRecords { get; set; }
 
 
 

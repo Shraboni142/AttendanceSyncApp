@@ -167,6 +167,7 @@ namespace AttandanceSyncApp.Repositories
         {
             return _context.SaveChanges();
         }
+        public AuthDbContext Context => _context;
 
         /// <summary>
         /// Releases all database resources used by this unit of work.

@@ -30,6 +30,8 @@ namespace AttandanceSyncApp.Models
 
         public DbSet<ServerIp> ServerIps { get; set; }
         public DbSet<DatabaseAccess> DatabaseAccess { get; set; }
+        public DbSet<SalaryGarbageRecord> SalaryGarbageRecords { get; set; }
+
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {

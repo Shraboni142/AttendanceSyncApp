@@ -1,4 +1,5 @@
-﻿using AttandanceSyncApp.Models.AttandanceSync;
+﻿using AttandanceSyncApp.Models;
+using AttandanceSyncApp.Models.AttandanceSync;
 using AttandanceSyncApp.Repositories.AttandanceSync;
 using AttandanceSyncApp.Repositories.Interfaces.AttandanceSync;
 using AttandanceSyncApp.Repositories.Interfaces.Auth;
@@ -32,6 +33,7 @@ namespace AttandanceSyncApp.Repositories.Interfaces
         IServerIpRepository ServerIps { get; }
 
         IDatabaseAccessRepository DatabaseAccess { get; }
+        AuthDbContext Context { get; }
 
         int SaveChanges();
     }

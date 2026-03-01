@@ -193,6 +193,7 @@
     <Compile Include="Controllers\Filters\AdminAuthorizeAttribute.cs" />
     <Compile Include="Controllers\Filters\AuthorizeUserAttribute.cs" />
     <Compile Include="Controllers\SalaryGarbge\AdminDatabaseAccessController.cs" />
+    <Compile Include="Controllers\SalaryGarbge\AdminSalaryGarbageController.cs" />
     <Compile Include="Controllers\SalaryGarbge\AdminServerIpController.cs" />
     <Compile Include="Controllers\SalaryGarbge\SalaryGarbgeController.cs" />
     <Compile Include="Controllers\SignupController.cs" />
@@ -273,6 +274,7 @@
     <Compile Include="Models\DTOs\Sync\SyncRequestDto.cs" />
     <Compile Include="Models\DTOs\Sync\UserCompanyDatabaseDto.cs" />
     <Compile Include="Models\DynamicDbContext.cs" />
+    <Compile Include="Models\SalaryGarbageRecord.cs" />
     <Compile Include="Models\SalaryGarbge\DatabaseAccess.cs" />
     <Compile Include="Models\SalaryGarbge\ServerIp.cs" />
     <Compile Include="Models\SyncRequest.cs" />
@@ -447,6 +449,7 @@
     <Content Include="Views\Admin\LoginSessions.cshtml" />
     <Content Include="Views\UserSignup\Register.cshtml" />
     <Content Include="Views\AdminUserApproval\Index.cshtml" />
+    <Content Include="Views\AdminSalaryGarbage\Index.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

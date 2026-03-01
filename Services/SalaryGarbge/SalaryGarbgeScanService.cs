@@ -1,13 +1,14 @@
-﻿using System;
+﻿using AttandanceSyncApp.Helpers;
+using AttandanceSyncApp.Models.DTOs;
+using AttandanceSyncApp.Models.DTOs.SalaryGarbge;
+using AttandanceSyncApp.Models.SalaryGarbge;
+using AttandanceSyncApp.Repositories.Interfaces;
+using AttandanceSyncApp.Services.Interfaces.SalaryGarbge;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using AttandanceSyncApp.Helpers;
-using AttandanceSyncApp.Models.DTOs;
-using AttandanceSyncApp.Models.DTOs.SalaryGarbge;
-using AttandanceSyncApp.Repositories.Interfaces;
-using AttandanceSyncApp.Services.Interfaces.SalaryGarbge;
 
 namespace AttandanceSyncApp.Services.SalaryGarbge
 {
@@ -101,11 +102,10 @@ namespace AttandanceSyncApp.Services.SalaryGarbge
         /// <param name="databaseName">Database name.</param>
         /// <returns>Detected garbage salary records.</returns>
         public ServiceResult<IEnumerable<GarbageDataDto>>
-            ScanDatabase(int serverIpId, string databaseName)
+    ScanDatabase(int serverIpId, string databaseName)
         {
             try
             {
-                // Validate server IP
                 var serverIp = _unitOfWork.ServerIps.GetById(serverIpId);
                 if (serverIp == null)
                 {
@@ -113,12 +113,34 @@ namespace AttandanceSyncApp.Services.SalaryGarbge
                         .FailureResult("Server IP not found");
                 }
 
-                // Execute garbage scan
+                // 🔥 CLEAR OLD DATA (IMPORTANT FIX)
+                _unitOfWork.Context.SalaryGarbageRecords.RemoveRange(
+                    _unitOfWork.Context.SalaryGarbageRecords);
+                _unitOfWork.Context.SaveChanges();
+
                 var garbageData = ScanDatabaseForGarbage(
                     serverIp.IpAddress,
                     serverIp.DatabaseUser,
                     serverIp.DatabasePassword,
                     databaseName);
+
+                foreach (var item in garbageData)
+                {
+                    _unitOfWork.Context.SalaryGarbageRecords.Add(
+                        new SalaryGarbageRecord
+                        {
+                            ServerIP = item.ServerIp,
+                            DatabaseName = item.DatabaseName,
+                            EmployeeId = item.EmployeeId,
+                            EmployeeCode = item.EmployeeCode,
+                            EmployeeName = item.EmployeeName,
+                            Problem = item.Problem,
+                            IsSolve = false,
+                            EntryDateTime = DateTime.Now
+                        });
+                }
+
+                _unitOfWork.Context.SaveChanges();
 
                 return ServiceResult<IEnumerable<GarbageDataDto>>
                     .SuccessResult(garbageData);
@@ -126,7 +148,7 @@ namespace AttandanceSyncApp.Services.SalaryGarbge
             catch (Exception ex)
             {
                 return ServiceResult<IEnumerable<GarbageDataDto>>
-                    .FailureResult($"Failed to scan database: {ex.Message}");
+                    .FailureResult(ex.Message);
             }
         }
 
@@ -135,13 +157,17 @@ namespace AttandanceSyncApp.Services.SalaryGarbge
         /// for garbage salary data.
         /// </summary>
         /// <returns>Aggregated scan result.</returns>
+
         public ServiceResult<GarbageScanResultDto> ScanAllDatabases()
         {
             try
             {
                 var result = new GarbageScanResultDto();
 
-                // Retrieve all active servers
+                _unitOfWork.Context.SalaryGarbageRecords.RemoveRange(
+                    _unitOfWork.Context.SalaryGarbageRecords);
+                _unitOfWork.Context.SaveChanges();
+
                 var serverIps = _unitOfWork.ServerIps
                     .GetAll()
                     .Where(s => s.IsActive)
@@ -151,40 +177,42 @@ namespace AttandanceSyncApp.Services.SalaryGarbge
 
                 foreach (var serverIp in serverIps)
                 {
-                    try
+                    var databases = GetDatabasesFromServer(
+                        serverIp.IpAddress,
+                        serverIp.DatabaseUser,
+                        serverIp.DatabasePassword);
+
+                    result.TotalDatabases += databases.Count;
+
+                    foreach (var dbName in databases)
                     {
-                        // Retrieve accessible databases per server
-                        var databases = GetDatabasesFromServer(
+                        var garbageData = ScanDatabaseForGarbage(
                             serverIp.IpAddress,
                             serverIp.DatabaseUser,
-                            serverIp.DatabasePassword);
+                            serverIp.DatabasePassword,
+                            dbName);
 
-                        result.TotalDatabases += databases.Count;
+                        result.GarbageData.AddRange(garbageData);
 
-                        foreach (var dbName in databases)
+                        foreach (var item in garbageData)
                         {
-                            try
-                            {
-                                // Scan each database for garbage data
-                                var garbageData = ScanDatabaseForGarbage(
-                                    serverIp.IpAddress,
-                                    serverIp.DatabaseUser,
-                                    serverIp.DatabasePassword,
-                                    dbName);
-
-                                result.GarbageData.AddRange(garbageData);
-                            }
-                            catch
-                            {
-                                // Skip databases with scan errors
-                            }
+                            _unitOfWork.Context.SalaryGarbageRecords.Add(
+                                new SalaryGarbageRecord
+                                {
+                                    ServerIP = item.ServerIp,
+                                    DatabaseName = item.DatabaseName,
+                                    EmployeeId = item.EmployeeId,
+                                    EmployeeCode = item.EmployeeCode,
+                                    EmployeeName = item.EmployeeName,
+                                    Problem = item.Problem,
+                                    IsSolve = false,
+                                    EntryDateTime = DateTime.Now
+                                });
                         }
                     }
-                    catch
-                    {
-                        // Skip servers with connection errors
-                    }
                 }
+
+                _unitOfWork.Context.SaveChanges();
 
                 result.TotalGarbageRecords = result.GarbageData.Count;
                 result.Summary =
@@ -198,7 +226,7 @@ namespace AttandanceSyncApp.Services.SalaryGarbge
             catch (Exception ex)
             {
                 return ServiceResult<GarbageScanResultDto>
-                    .FailureResult($"Failed to scan databases: {ex.Message}");
+                    .FailureResult(ex.Message);
             }
         }
 
